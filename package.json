@@ -1,0 +1,31 @@
+{
+  "name": "gfsite",
+  "longName": "GrapeFruit Website",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Chad Engler <chad@pantherdev.com>",
+  "contributors": [],
+  "homepage": "https://github.com/grapefruitjs/grapefruitjs.org",
+  "bugs": "https://github.com/grapefruitjs/grapefruitjs.org/issues",
+  "license": "MIT",
+  "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grapefruitjs/grapefruitjs.org.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "0.4.x",
+    "grunt-contrib-jshint": "0.x",
+    "grunt-contrib-concat": "0.x",
+    "grunt-contrib-uglify": "0.x",
+    "grunt-contrib-connect": "0.x",
+    "grunt-contrib-less": "0.x",
+    "grunt-contrib-watch": "0.x",
+    "grunt-replace": "0.x"
+  },
+  "scripts": {
+    "build": "grunt build"
+  },
+  "private": true
+}
