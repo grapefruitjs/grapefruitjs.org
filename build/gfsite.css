@@ -354,6 +354,104 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
 }
+.pace {
+  -webkit-pointer-events: none;
+  pointer-events: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+.pace-inactive {
+  display: none;
+}
+.pace .pace-progress {
+  background: #29d;
+  position: fixed;
+  z-index: 2000;
+  top: 0;
+  left: 0;
+  height: 2px;
+}
+.pace .pace-progress-inner {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+  opacity: 1.0;
+  -webkit-transform: rotate(3deg) translate(0px, -4px);
+  -moz-transform: rotate(3deg) translate(0px, -4px);
+  -ms-transform: rotate(3deg) translate(0px, -4px);
+  -o-transform: rotate(3deg) translate(0px, -4px);
+  transform: rotate(3deg) translate(0px, -4px);
+}
+.pace .pace-activity {
+  display: block;
+  position: fixed;
+  z-index: 2000;
+  top: 15px;
+  right: 15px;
+  width: 14px;
+  height: 14px;
+  border: solid 2px transparent;
+  border-top-color: #29d;
+  border-left-color: #29d;
+  border-radius: 10px;
+  -webkit-animation: pace-spinner 400ms linear infinite;
+  -moz-animation: pace-spinner 400ms linear infinite;
+  -ms-animation: pace-spinner 400ms linear infinite;
+  -o-animation: pace-spinner 400ms linear infinite;
+  animation: pace-spinner 400ms linear infinite;
+}
+@-webkit-keyframes pace-spinner {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-moz-keyframes pace-spinner {
+  0% {
+    -moz-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-o-keyframes pace-spinner {
+  0% {
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@-ms-keyframes pace-spinner {
+  0% {
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes pace-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 body {
   font: 12px "Helvetica Neue", "HelveticaNeue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
@@ -364,7 +462,6 @@ header {
   position: fixed;
   color: #fff;
   border-bottom: 1px solid #000;
-  box-shadow: 0px 5px 0px rgba(0, 0, 0, 0.15);
   background: #303030;
   /* Old browsers */
 
@@ -395,25 +492,25 @@ header nav {
   padding: 0 10px;
   margin: 0 auto;
 }
-header ul {
+header nav ul {
   margin: 0;
   padding: 0;
   list-style: none;
   float: left;
 }
-header ul li {
+header nav ul li {
   margin: 0;
   float: left;
   height: 54px;
   line-height: 54px;
 }
-header ul li.start {
+header nav ul li.start {
   border-right: solid 1px #353535;
 }
-header ul li.end {
+header nav ul li.end {
   border-right: solid 1px #111111;
 }
-header ul li a {
+header nav ul li a {
   padding: 0 40px;
   font-weight: bold;
   text-transform: uppercase;
@@ -429,24 +526,18 @@ header ul li a {
   border-right: solid 1px #353535;
   border-left: solid 1px #111111;
 }
-header ul li a:hover {
+header nav ul li a:hover {
   color: #fff;
   background: rgba(100, 100, 100, 0.5);
 }
 #demo {
   margin-top: 54px;
-  min-height: 350px;
-  background: #888888 url('../img/header-bg.png') top left repeat;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  -webkit-box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  -moz-box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  -o-box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  -ms-box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
-  box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -o-box-sizing: border-box;
-  -ms-box-sizing: border-box;
+  height: 350px;
+  box-shadow: inset 0 6px 0 0 rgba(255, 255, 255, 0.2);
+  -webkit-box-shadow: inset 0 6px 0 0 rgba(255, 255, 255, 0.2);
+  -moz-box-shadow: inset 0 6px 0 0 rgba(255, 255, 255, 0.2);
+  -o-box-shadow: inset 0 6px 0 0 rgba(255, 255, 255, 0.2);
+  -ms-box-shadow: inset 0 6px 0 0 rgba(255, 255, 255, 0.2);
   background: #216498;
   /* Old browsers */
 
@@ -472,9 +563,12 @@ header ul li a:hover {
   /* IE6-9 fallback on horizontal gradient */
 
 }
+#demo canvas {
+  outline: none;
+}
 #content {
   min-height: 500px;
-  border-top: 1px solid #0062e7;
+  border-top: 1px solid #222;
   background: #2f2f2f url('../img/body-bg.png') top left repeat;
 }
 footer {
