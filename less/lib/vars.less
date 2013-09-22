@@ -1,7 +1,7 @@
 //create a horizontal gradient 
-.gradient(@start, @stop) {
+.gradient(@start, @stop, @default) {
     //fallback background
-    background: @start; /* Old browsers */
+    background: @default; /* Old browsers */
 
     //standard gradient
     background: linear-gradient(to bottom,  @start 0%, @stop 100%); /* W3C */
@@ -12,7 +12,23 @@
     background: -moz-linear-gradient(top,  @start 0%,  @stop 100%); /* FF3.6+ */
     background: -webkit-linear-gradient(top,  @start 0%, @stop 100%); /* Chrome10+,Safari5.1+ */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, @start), color-stop(100%, @stop)); /* Chrome,Safari4+ */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='@start', endColorstr='@stop',GradientType=0 ); /* IE6-9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@start', endColorstr='@stop', GradientType=0); /* IE6-9 */
+}
+
+.gradient_radial(@start, @stop, @default) {
+    //fallback background
+    background: @default; /* Old browsers */
+
+    //standard gradient
+    background: radial-gradient(ellipse at center, @start 0%, @stop 100%); /* W3C */
+
+    //browser specific gradients
+    background: -o-radial-gradient(center, ellipse cover, @start 0%, @stop 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover, @start 0%, @stop 100%); /* IE10+ */
+    background: -moz-radial-gradient(center, ellipse cover, @start 0%, @stop 100%); /* FF3.6+ */
+    background: -webkit-radial-gradient(center, ellipse cover, @start 0%, @stop 100%); /* Chrome10+,Safari5.1+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, @start), color-stop(100%, @stop)); /* Chrome,Safari4+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@start', endColorstr='@stop', GradientType=1); /* IE6-9 fallback on horizontal gradient */
 }
 
 .transition(@params) {
@@ -21,4 +37,20 @@
     -o-transition: @params;
     -webkit-transition: @params;
     -ms-transition: @params;
+}
+
+.box-sizing(@params) {
+    box-sizing: @params;
+    -webkit-box-sizing: @params;
+    -moz-box-sizing: @params;
+    -o-box-sizing: @params;
+    -ms-box-sizing: @params;
+}
+
+.box-shadow(@params) {
+    box-shadow: @params;
+    -webkit-box-shadow: @params;
+    -moz-box-shadow: @params;
+    -o-box-shadow: @params;
+    -ms-box-shadow: @params;
 }
