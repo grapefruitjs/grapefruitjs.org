@@ -123,7 +123,10 @@ module.exports = function(grunt) {
                     module: false,
 
                     gf: false,
-                    PIXI: false
+                    PIXI: false,
+
+                    Cloud: false,
+                    Player: false
                 }
             }
         },

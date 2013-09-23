@@ -5857,7 +5857,7 @@ Object.defineProperty(Rectangle.prototype, "width", {
 
 Object.defineProperty(Rectangle.prototype, "height", {
     get: function() {
-        return this._y;
+        return this._height;
     },
     set: function(h) {
         this._height = h || 0;
@@ -6998,9 +6998,11 @@ return module.exports;
   // uRequire: start body of original nodejs module
 var Container = require("../display/Container"), Vector = require("../math/Vector"), Polygon = require("../math/Polygon"), Ellipse = require("../math/Ellipse"), Rectangle = require("../math/Rectangle"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), math = require("../math/math");
 
-var ObjectGroup = module.exports = function(game, group) {
+var ObjectGroup = module.exports = function(map, group) {
     Container.call(this, group);
-    this.game = game;
+    this.map = map;
+    this.game = map.game;
+    this.state = map.state;
     this.name = group.name || "";
     this.color = group.color;
     this.properties = group.properties || {};
@@ -7255,15 +7257,46 @@ return module.exports;
 );
 })(__global);
 (function (window) {
-  define('tilemap/Tilelayer',['require', 'exports', 'module', '../display/Container', '../math/Vector', '../math/math', '../utils/utils', '../utils/inherit', '../utils/support'], 
+  define('tilemap/Tile',['require', 'exports', 'module', '../display/Sprite', '../utils/inherit', '../constants'], 
   function (require, exports, module) {
   // uRequire: start body of original nodejs module
-var Container = require("../display/Container"), Vector = require("../math/Vector"), math = require("../math/math"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), support = require("../utils/support");
+var Sprite = require("../display/Sprite"), inherit = require("../utils/inherit"), C = require("../constants");
+
+var Tile = module.exports = function(texture) {
+    this.collisionType = C.COLLISION_TYPE.NONE;
+    Sprite.call(this, texture);
+    this.type = C.SPRITE_TYPE.TILE;
+};
+
+inherit(Tile, Sprite, {
+    onCollision: function(obj) {
+        Sprite.prototype.onCollision.call(this, obj);
+        switch (this.collisionType) {
+          case C.COLLISION_TYPE.SOLID:
+            obj.setVelocity(0);
+            break;
+        }
+    }
+});
+// uRequire: end body of original nodejs module
+
+
+return module.exports;
+}
+);
+})(__global);
+(function (window) {
+  define('tilemap/Tilelayer',['require', 'exports', 'module', '../display/Container', '../math/Rectangle', '../math/Vector', '../display/Texture', './Tile', '../math/math', '../utils/utils', '../utils/inherit', '../utils/support', '../constants'], 
+  function (require, exports, module) {
+  // uRequire: start body of original nodejs module
+var Container = require("../display/Container"), Rectangle = require("../math/Rectangle"), Vector = require("../math/Vector"), Texture = require("../display/Texture"), Tile = require("./Tile"), math = require("../math/math"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), support = require("../utils/support"), C = require("../constants");
 
 var Tilelayer = module.exports = function(map, layer) {
     Container.call(this, layer);
     this.map = map;
     this.game = map.game;
+    this.state = map.state;
+    this.tiles = [];
     this.name = layer.name || "";
     this.size = new Vector(layer.width || 0, layer.height || 0);
     this.tileIds = support.typedArrays ? new Uint32Array(layer.data) : layer.data;
@@ -7273,70 +7306,220 @@ var Tilelayer = module.exports = function(map, layer) {
     this.position.y = layer.y;
     this.alpha = layer.opacity;
     this.visible = layer.visible;
-    this._overlaps = [];
-    this._tempTileBlock = [];
-    this._tempTileX = 0;
-    this._tempTileY = 0;
-    this._tempTileW = 0;
-    this._tempTileH = 0;
+    this.preRender = this.properties.preRender;
+    this.chunkSize = new gf.Vector(this.properties.chunkSizeX || this.properties.chunkSize || 512, this.properties.chunkSizeY || this.properties.chunkSize || 512);
+    this._preRendered = false;
+    this._tilePool = [];
+    this._buffered = {
+        left: false,
+        right: false,
+        top: false,
+        bottom: false
+    };
+    this._panDelta = new gf.Vector;
+    this._rendered = new gf.Rectangle;
 };
 
 inherit(Tilelayer, Container, {
-    render: function(ctx, x, y, width, height) {
-        var map = this.map, tsx = map.tileSize.x, tsy = map.tileSize.y, startX = Math.floor(x / tsx), startY = Math.floor(y / tsy), maxX = Math.ceil(width / tsx), maxY = Math.ceil(height / tsx), nx = x * width % tsx, ny = y * height % tsy, sx = map.size.x;
-        for (var i = startX; i < maxX; ++i) {
-            for (var j = startY; j < maxY; ++j) {
-                var id = i + j * sx, tid = this.tileIds[id], set = map.getTileset(tid);
-                if (set) {
-                    var tx = set.getTileTexture(tid), frame = tx.frame;
-                    ctx.drawImage(tx.baseTexture.source, frame.x, frame.y, frame.width, frame.height, i * tsx - nx + set.tileoffset.x, j * tsy - ny + set.tileoffset.y, frame.width, frame.height);
-                }
+    render: function(x, y, width, height) {
+        if (this.preRender) {
+            if (!this._preRendered) this._preRender();
+            return;
+        }
+        if (!this.tileSize) this.tileSize = this.parent.tileSize;
+        this.clearTiles();
+        this._renderTiles(x, y, width, height);
+    },
+    _preRender: function() {
+        if (!this.visible) return;
+        this._preRendered = true;
+        this.tileSize = this.chunkSize.clone();
+        var world = this.parent, width = world.size.x * world.tileSize.x, height = world.size.y * world.tileSize.y, xChunks = Math.ceil(width / this.chunkSize.x), yChunks = Math.ceil(height / this.chunkSize.y);
+        for (var x = 0; x < xChunks; ++x) {
+            for (var y = 0; y < yChunks; ++y) {
+                var cw = x === xChunks - 1 ? width - x * this.chunkSize.x : this.chunkSize.x, ch = y === yChunks - 1 ? height - y * this.chunkSize.y : this.chunkSize.y;
+                this._preRenderChunk(x, y, cw, ch);
             }
         }
     },
-    getTileOverlaps: function(sprite) {
-        this._overlaps.length = 0;
-        if (sprite.body.x < 0 || sprite.body.x > this.map.realSize.x || sprite.body.y < 0 || sprite.body.y > this.map.realSize.y) {
-            return this._overlaps;
-        }
-        this._tempTileX = math.snapFloor(sprite.body.x, this.map.tileSize.x) / this.map.tileSize.x;
-        this._tempTileY = math.snapFloor(sprite.body.y, this.map.tileSize.y) / this.map.tileSize.y;
-        this._tempTileW = (math.snapCeil(sprite.body.width, this.map.tileSize.x) + this.map.tileSize.x) / this.map.tileSize.x;
-        this._tempTileH = (math.snapCeil(sprite.body.height, this.map.tileSize.y) + this.map.tileSize.y) / this.map.tileSize.y;
-        this.getTempBlock(this._tempTileX, this._tempTileY, this._tempTileW, this._tempTileH, true);
-        for (var i = 0, il = this._tempTileBlock.length; i < il; ++i) {
-            var block = this._tempTileBlock[i];
-            if (this.game.physics.separateTile(sprite, block.x * this.map.tileSize.x, block.y * this.map.tileSize.y, this.map.tileSize.x, this.map.tileSize.y, block.tile.mass || 1, block.tile.collideLeft, block.tile.collideRight, block.tile.collideUp, block.tile.collideDown, block.tile.separateX, block.tile.separateY)) {
-                this._overlaps.push(block);
-            }
-        }
-        return this._overlaps;
-    },
-    getTempBlock: function(x, y, width, height, collisionOnly) {
-        collisionOnly = collisionOnly || false;
-        var map = this.map, sx = map.size.x, sy = map.size.y;
-        if (x < 0) x = 0;
-        if (y < 0) y = 0;
-        if (width > sx) width = sx;
-        if (height > sy) height = sy;
-        this._tempTileBlock.length = 0;
-        for (var ty = y; ty < y + height; ty++) {
-            for (var tx = x; tx < x + width; tx++) {
-                var id = tx + ty * sx, tid = this.tileIds[id], set = map.getTileset(tid), props;
-                if (!set) continue;
-                props = set.getTileProperties(tid);
-                if (!collisionOnly || props.collidable) {
-                    this._tempTileBlock.push({
-                        x: tx,
-                        y: ty,
-                        tile: props
-                    });
+    _preRenderChunk: function(cx, cy, w, h) {
+        var world = this.parent, tsx = world.tileSize.x, tsy = world.tileSize.y, xTiles = w / tsx, yTiles = h / tsy, nx = cx * this.chunkSize.x % tsx, ny = cy * this.chunkSize.y % tsy, tx = Math.floor(cx * this.chunkSize.x / tsx), ty = Math.floor(cy * this.chunkSize.y / tsy), sx = world.size.x, sy = world.size.y, canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+        canvas.width = w;
+        canvas.height = h;
+        for (var x = 0; x < xTiles; ++x) {
+            for (var y = 0; y < yTiles; ++y) {
+                if (x + tx < sx && y + ty < sy) {
+                    var id = x + tx + (y + ty) * sx, tid = this.tileIds[id], set = world.getTileset(tid), tex, frame;
+                    if (set) {
+                        tex = set.getTileTexture(tid);
+                        frame = tex.frame;
+                        ctx.drawImage(tex.baseTexture.source, frame.x, frame.y, frame.width, frame.height, x * tsx - nx + set.tileoffset.x, y * tsy - ny + set.tileoffset.y, frame.width, frame.height);
+                    }
                 }
             }
         }
+        var tile = new Tile(Texture.fromCanvas(canvas));
+        tile.position.x = cx * this.chunkSize.x;
+        tile.position.y = cy * this.chunkSize.y;
+        if (!this.tiles[cx]) this.tiles[cx] = {};
+        this.addChild(tile);
+        this.tiles[cx][cy] = tile;
+    },
+    _renderTiles: function(sx, sy, sw, sh) {
+        sx = Math.floor(sx / this.parent.scaledTileSize.x);
+        sy = Math.floor(sy / this.parent.scaledTileSize.y);
+        sx = sx < 0 ? 0 : sx;
+        sy = sy < 0 ? 0 : sy;
+        sw = Math.ceil(sw / this.parent.scaledTileSize.x) + 1;
+        sh = Math.ceil(sh / this.parent.scaledTileSize.y) + 1;
+        sw = sx + sw > this.parent.size.x ? this.parent.size.x - sx : sw;
+        sh = sy + sh > this.parent.size.y ? this.parent.size.y - sy : sh;
+        var endX = sx + sw, endY = sy + sh;
+        for (var x = sx; x < endX; ++x) {
+            for (var y = sy; y < endY; ++y) {
+                this.moveTileSprite(-1, -1, x, y);
+            }
+        }
+        this._rendered.x = sx;
+        this._rendered.y = sy;
+        this._rendered.width = sw;
+        this._rendered.height = sh;
+        this._buffered.left = this._buffered.right = this._buffered.top = this._buffered.bottom = false;
+        this._panDelta.x = this.parent.position.x % this.parent.scaledTileSize.x;
+        this._panDelta.y = this.parent.position.y % this.parent.scaledTileSize.y;
+    },
+    _freeTile: function(tx, ty) {
+        if (this.tiles[tx] && this.tiles[tx][ty]) {
+            this.clearTile(this.tiles[tx][ty]);
+            this.tiles[tx][ty] = null;
+        }
+    },
+    clearTiles: function(remove) {
+        for (var c = this.children.length - 1; c > -1; --c) {
+            this.clearTile(this.children[c], remove);
+        }
+        this.tiles.length = 0;
+    },
+    clearTile: function(tile, remove) {
+        tile.visible = false;
+        this.state.physics.removeSprite(tile);
+        if (remove) this.removeChild(tile); else this._tilePool.push(tile);
+    },
+    moveTileSprite: function(fromTileX, fromTileY, toTileX, toTileY) {
+        if (toTileX < 0 || toTileY < 0 || toTileX >= this.parent.size.x || toTileY >= this.parent.size.y) {
+            return;
+        }
+        var tile, id = toTileX + toTileY * this.size.x, tileId = this.tileIds[id], set = this.parent.getTileset(tileId), texture, props, position, hitArea, interactive;
+        if (!set) {
+            this._freeTile(fromTileX, fromTileY);
+            return;
+        }
+        texture = set.getTileTexture(tileId);
+        props = set.getTileProperties(tileId);
+        hitArea = props.hitArea || set.properties.hitArea;
+        interactive = this._getInteractive(set, props);
+        position = [ toTileX * this.parent.tileSize.x + set.tileoffset.x, toTileY * this.parent.tileSize.y + set.tileoffset.y ];
+        position[1] += this.parent.tileSize.y;
+        if (this.tiles[fromTileX] && this.tiles[fromTileX][fromTileY]) {
+            tile = this.tiles[fromTileX][fromTileY];
+            this.tiles[fromTileX][fromTileY] = null;
+            this.state.physics.removeSprite(tile);
+        } else {
+            tile = this._tilePool.pop();
+        }
+        if (!tile) {
+            tile = new Tile(texture);
+            tile.mass = props.mass;
+            tile.anchor.y = 1;
+            this.addChild(tile);
+        }
+        tile.collisionType = props.type;
+        tile.visible = true;
+        tile.hitArea = hitArea;
+        tile.interactive = interactive;
+        tile.setTexture(texture);
+        tile.position.x = position[0];
+        tile.position.y = position[1];
+        if (props.mass) {
+            this.state.physics.addSprite(tile);
+            tile.body.type = C.PHYSICS_TYPE.STATIC;
+        }
+        if (interactive) {
+            tile.click = this.onTileEvent.bind(this, "click", tile);
+            tile.mousedown = this.onTileEvent.bind(this, "mousedown", tile);
+            tile.mouseup = this.onTileEvent.bind(this, "mouseup", tile);
+            tile.mousemove = this.onTileEvent.bind(this, "mousemove", tile);
+            tile.mouseout = this.onTileEvent.bind(this, "mouseout", tile);
+            tile.mouseover = this.onTileEvent.bind(this, "mouseover", tile);
+            tile.mouseupoutside = this.onTileEvent.bind(this, "mouseupoutside", tile);
+        }
+        if (!this.tiles[toTileX]) this.tiles[toTileX] = [];
+        this.tiles[toTileX][toTileY] = tile;
+        return tile;
+    },
+    onTileEvent: function(eventName, tile, data) {
+        this.parent.onTileEvent(eventName, tile, data);
+    },
+    _getInteractive: function(set, props) {
+        return props.interactive || set && set.properties.interactive || this.properties.interactive || this.parent.properties.interactive;
+    },
+    pan: function(dx, dy) {
+        if (this.preRender) return;
+        this._panDelta.x += dx;
+        this._panDelta.y += dy;
+        var tszX = this.parent.scaledTileSize.x, tszY = this.parent.scaledTileSize.y;
+        if (dx > 0 && !this._buffered.left) this._renderLeft(this._buffered.left = true); else if (dx < 0 && !this._buffered.right) this._renderRight(this._buffered.right = true); else if (dy > 0 && !this._buffered.top) this._renderUp(this._buffered.top = true); else if (dy < 0 && !this._buffered.bottom) this._renderDown(this._buffered.bottom = true);
+        while (this._panDelta.x >= tszX) {
+            this._renderLeft();
+            this._panDelta.x -= tszX;
+        }
+        while (this._panDelta.x <= -tszX) {
+            this._renderRight();
+            this._panDelta.x += tszX;
+        }
+        while (this._panDelta.y >= tszY) {
+            this._renderUp();
+            this._panDelta.y -= tszY;
+        }
+        while (this._panDelta.y <= -tszY) {
+            this._renderDown();
+            this._panDelta.y += tszY;
+        }
+        if (this.hasPhysics) {
+            this.parent.parent.physics.reindexStatic();
+        }
+    },
+    _renderLeft: function(forceNew) {
+        for (var i = 0; i < this._rendered.height; ++i) {
+            this.moveTileSprite(forceNew ? -1 : this._rendered.right, forceNew ? -1 : this._rendered.top + i, this._rendered.left - 1, this._rendered.top + i);
+        }
+        this._rendered.x--;
+        if (forceNew) this._rendered.width++;
+    },
+    _renderRight: function(forceNew) {
+        for (var i = 0; i < this._rendered.height; ++i) {
+            this.moveTileSprite(forceNew ? -1 : this._rendered.left, forceNew ? -1 : this._rendered.top + i, this._rendered.right + 1, this._rendered.top + i);
+        }
+        if (!forceNew) this._rendered.x++;
+        if (forceNew) this._rendered.width++;
+    },
+    _renderUp: function(forceNew) {
+        for (var i = 0; i < this._rendered.width; ++i) {
+            this.moveTileSprite(forceNew ? -1 : this._rendered.left + i, forceNew ? -1 : this._rendered.bottom, this._rendered.left + i, this._rendered.top - 1);
+        }
+        this._rendered.y--;
+        if (forceNew) this._rendered.height++;
+    },
+    _renderDown: function(forceNew) {
+        for (var i = 0; i < this._rendered.width; ++i) {
+            this.moveTileSprite(forceNew ? -1 : this._rendered.left + i, forceNew ? -1 : this._rendered.top, this._rendered.left + i, this._rendered.bottom + 1);
+        }
+        if (!forceNew) this._rendered.y++;
+        if (forceNew) this._rendered.height++;
     },
     destroy: function() {
         Container.prototype.destroy.call(this);
+        this.clearTiles(true);
         this.game = null;
         this.name = null;
         this.size = null;
@@ -7450,9 +7633,10 @@ return module.exports;
   // uRequire: start body of original nodejs module
 var Container = require("../display/Container"), ObjectGroup = require("./ObjectGroup"), BaseTexture = require("../display/BaseTexture"), Texture = require("../display/Texture"), Sprite = require("../display/Sprite"), Vector = require("../math/Vector"), Tilelayer = require("./Tilelayer"), Tileset = require("./Tileset"), PIXI = require("../vendor/pixi"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), C = require("../constants");
 
-var Tilemap = module.exports = function(game, map, tilesetTextures) {
+var Tilemap = module.exports = function(state, map, tilesetTextures) {
     Container.call(this, map);
-    this.game = game;
+    this.state = state;
+    this.game = state.game;
     this.properties = utils.parseTiledProperties(map.properties) || {};
     this.scale.x = this.properties.scale || 1;
     this.scale.y = this.properties.scale || 1;
@@ -7464,12 +7648,6 @@ var Tilemap = module.exports = function(game, map, tilesetTextures) {
     this.tilesets = [];
     this.scaledTileSize = new Vector(map.tilewidth * this.scale.x, map.tileheight * this.scale.y);
     this.realSize = new Vector(this.size.x * this.scaledTileSize.x, this.size.y * this.scaledTileSize.y);
-    this.collisionLayer = null;
-    this.canvas = document.createElement("canvas");
-    this.ctx = this.canvas.getContext("2d");
-    this.btx = new BaseTexture(this.canvas);
-    this.tx = new Texture(this.btx);
-    this.addChild(this.spr = new Sprite(this.tx));
     for (var t = 0, tl = map.tilesets.length; t < tl; ++t) {
         var ts = map.tilesets[t];
         this.tilesets.push(new Tileset(tilesetTextures[ts.name], ts));
@@ -7479,11 +7657,9 @@ var Tilemap = module.exports = function(game, map, tilesetTextures) {
         switch (map.layers[i].type) {
           case "tilelayer":
             lyr = new Tilelayer(this, map.layers[i]);
-            if (!this.collisionLayer) this.collisionLayer = lyr;
-            if (name.indexOf("collide") !== -1 || name.indexOf("collision") !== -1) this.collisionLayer = lyr;
             break;
           case "objectgroup":
-            lyr = new ObjectGroup(this.game, map.layers[i]);
+            lyr = new ObjectGroup(this, map.layers[i]);
             break;
           case "imagelayer":
             lyr = new Sprite(map.layers[i]);
@@ -7491,16 +7667,10 @@ var Tilemap = module.exports = function(game, map, tilesetTextures) {
         }
         this.addChild(lyr);
     }
-    this._cache = {
-        x: null,
-        y: null,
-        width: null,
-        height: null
-    };
-    this.resize(this.game.width, this.game.height);
     var w = this.game.state.active.world;
     w.bounds.width = Math.max(w.bounds.width, this.realSize.x);
     w.bounds.height = Math.max(w.bounds.height, this.realSize.y);
+    this.state.physics.tree.setBounds(w.bounds.clone());
 };
 
 inherit(Tilemap, Container, {
@@ -7556,27 +7726,18 @@ inherit(Tilemap, Container, {
             if (o.name === name) return o;
         }
     },
-    render: function(x, y, width, height) {
-        if (this._cache.x === x && this._cache.y === y && this._cache.w === width && this._cache.h === height) return this;
-        this._cache.x = x;
-        this._cache.y = y;
-        this._cache.w = width;
-        this._cache.h = height;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    pan: function(x, y) {
         for (var i = 0, il = this.children.length; i < il; ++i) {
             var o = this.children[i];
-            if (o.render) o.render(this.ctx, x, y, width, height);
+            if (o.pan) o.pan(x, y);
         }
-        if (this.game.renderMethod === C.RENDERER.WEBGL) PIXI.texturesToUpdate.push(this.btx);
         return this;
     },
-    resize: function(w, h) {
-        this.canvas.width = w;
-        this.canvas.height = h;
-        this.btx.width = w;
-        this.btx.height = h;
-        this.tx.frame.width = w;
-        this.tx.frame.height = h;
+    render: function(x, y, width, height) {
+        for (var i = 0, il = this.children.length; i < il; ++i) {
+            var o = this.children[i];
+            if (o.render) o.render(x, y, width, height);
+        }
         return this;
     }
 });
@@ -7803,15 +7964,16 @@ inherit(ObjectFactory, Object, {
     tilemap: function(key, constrain) {
         var obj = this.game.cache.getTilemap(key) || {}, fmt = obj.format, data = obj.data, txs = obj.textures, tilemap;
         if (fmt === C.FILE_FORMAT.JSON) {
-            tilemap = new Tilemap(this.game, data, txs);
+            tilemap = new Tilemap(this.state, data, txs);
         } else if (fmt === C.FILE_FORMAT.XML) {
-            tilemap = Tilemap.fromXML(this.game, data, txs);
+            tilemap = Tilemap.fromXML(this.state, data, txs);
         } else if (fmt === C.FILE_FORMAT.CSV) {
-            tilemap = Tilemap.fromCSV(this.game, data, txs);
+            tilemap = Tilemap.fromCSV(this.state, data, txs);
         }
         if (constrain) {
             this.state.camera.constrain(new Rectangle(0, 0, tilemap.realSize.x, tilemap.realSize.y));
         }
+        tilemap.render(-this.state.world.position.x, -this.state.world.position.x, this.game.width, this.game.height);
         return this.parent.addChild(tilemap);
     },
     gui: function(tx, interact) {
@@ -8452,19 +8614,16 @@ inherit(World, Container, {
         x = x.x !== undefined ? x.x : x || 0;
         this.position.x += x * this.scale.x;
         this.position.y += y * this.scale.y;
-        return this;
-    },
-    update: function() {
         for (var i = 0, il = this.children.length; i < il; ++i) {
             var o = this.children[i];
-            if (o.render) o.render(-this.position.x, -this.position.y, this.game.camera.size.x, this.game.camera.size.y);
+            if (o.pan) o.pan(x, y);
         }
         return this;
     },
     resize: function(w, h) {
         for (var i = 0, il = this.children.length; i < il; ++i) {
             var o = this.children[i];
-            if (o.resize) o.resize(w, h);
+            if (o.render) o.render(-this.position.x, -this.position.y, w, h);
         }
         return this;
     }
@@ -8489,17 +8648,15 @@ var QuadTree = module.exports = function(bounds, maxObjects, maxLevels, level) {
     this.setBounds(bounds);
     this.objects = [];
     this.nodes = [];
-    this._nextLevel = this.level;
 };
 
 inherit(QuadTree, Object, {
     split: function() {
-        var b = this.bounds;
-        this._nextLevel++;
-        this.nodes[0] = new QuadTree(new Rectangle(b.midX, b.y, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, this._nextLevel);
-        this.nodes[1] = new QuadTree(new Rectangle(b.x, b.y, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, this._nextLevel);
-        this.nodes[2] = new QuadTree(new Rectangle(b.x, b.midY, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, this._nextLevel);
-        this.nodes[3] = new QuadTree(new Rectangle(b.midX, b.midY, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, this._nextLevel);
+        var b = this.bounds, next = this.level + 1;
+        this.nodes[0] = new QuadTree(new Rectangle(b.midX, b.y, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, next);
+        this.nodes[1] = new QuadTree(new Rectangle(b.x, b.y, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, next);
+        this.nodes[2] = new QuadTree(new Rectangle(b.x, b.midY, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, next);
+        this.nodes[3] = new QuadTree(new Rectangle(b.midX, b.midY, b.subWidth, b.subHeight), this.maxObjects, this.maxLevels, next);
     },
     insert: function(body) {
         var i = 0, index = -1;
@@ -8594,7 +8751,6 @@ var Rectangle = require("../math/Rectangle"), Vector = require("../math/Vector")
 var Body = module.exports = function(sprite) {
     Rectangle.call(this, sprite.position.x, sprite.position.y, sprite.width, sprite.height);
     this.sprite = sprite;
-    this.size = sprite.currentFrame;
     this.type = C.PHYSICS_TYPE.DYNAMIC;
     this.solveType = C.SOLVE_TYPE.DISPLACE;
     this.velocity = new Vector;
@@ -8608,7 +8764,7 @@ var Body = module.exports = function(sprite) {
     this.angularAccel = 0;
     this.angularDrag = 0;
     this.maxAngular = 1e3;
-    this.mass = 1;
+    this.mass = sprite.mass || 1;
     this.rotation = 0;
     this.allowRotation = true;
     this.allowCollide = C.DIRECTION.ALL;
@@ -8635,10 +8791,10 @@ inherit(Body, Rectangle, {
         if (vel) math.clamp(vel, -maxVel, maxVel);
         return vel;
     },
-    updateMotion: function(dt) {
+    updateMotion: function(dt, gravity) {
         if (this.type === C.PHYSICS_TYPE.DYNAMIC) {
-            this.velocity.x += this.gravity.x * dt;
-            this.velocity.y += this.gravity.y * dt;
+            this.velocity.x += gravity.x + this.gravity.x;
+            this.velocity.y += gravity.y + this.gravity.y;
         }
         this._vDelta = (this.computeVelocity(dt, this.angularVelocity, this.angularAccel, this.angularDrag, this.maxAngular) - this.angularVelocity) / 2;
         this.angularVelocity += this._vDelta;
@@ -8650,21 +8806,21 @@ inherit(Body, Rectangle, {
         this.velocity.y += this._vDelta;
         this.y += this.velocity.y * dt;
     },
-    update: function(dt) {
+    update: function(dt, gravity) {
         this.wasTouching = this.touching;
         this.touching = C.DIRECTION.NONE;
         this.lastPos.set(this.x, this.y);
         this.x = this.sprite.position.x - this.sprite.anchor.x * this._width + this.offset.x;
         this.y = this.sprite.position.y - this.sprite.anchor.y * this._height + this.offset.y;
-        this.rotation = this.sprite.angle;
-        if (this.type !== C.PHYSICS_TYPE.STATIC) this.updateMotion(dt);
+        this.rotation = this.sprite.rotation;
+        if (this.type !== C.PHYSICS_TYPE.STATIC) this.updateMotion(dt, gravity);
         this.syncSprite();
     },
     syncSprite: function() {
         this.sprite.position.x = this.x - this.offset.x + this.sprite.anchor.x * this._width;
         this.sprite.position.y = this.y - this.offset.y + this.sprite.anchor.y * this._height;
         if (this.allowRotation) {
-            this.sprite.angle = this.rotation;
+            this.sprite.rotation = this.rotation;
         }
     },
     deltaX: function() {
@@ -8682,10 +8838,10 @@ return module.exports;
 );
 })(__global);
 (function (window) {
-  define('physics/Physics',['require', 'exports', 'module', '../math/QuadTree', '../math/Rectangle', '../display/Container', '../display/Sprite', '../tilemap/Tilemap', './Body', '../utils/inherit', '../math/math', '../constants'], 
+  define('physics/Physics',['require', 'exports', 'module', '../math/QuadTree', '../math/Rectangle', '../display/Container', '../display/Sprite', '../tilemap/Tilemap', './Body', '../math/Vector', '../utils/inherit', '../math/math', '../constants'], 
   function (require, exports, module) {
   // uRequire: start body of original nodejs module
-var QuadTree = require("../math/QuadTree"), Rectangle = require("../math/Rectangle"), Container = require("../display/Container"), Sprite = require("../display/Sprite"), Tilemap = require("../tilemap/Tilemap"), Body = require("./Body"), inherit = require("../utils/inherit"), math = require("../math/math"), C = require("../constants");
+var QuadTree = require("../math/QuadTree"), Rectangle = require("../math/Rectangle"), Container = require("../display/Container"), Sprite = require("../display/Sprite"), Tilemap = require("../tilemap/Tilemap"), Body = require("./Body"), Vector = require("../math/Vector"), inherit = require("../utils/inherit"), math = require("../math/math"), C = require("../constants");
 
 var Physics = module.exports = function(state) {
     this.state = state;
@@ -8693,6 +8849,7 @@ var Physics = module.exports = function(state) {
     this.maxLevels = C.PHYSICS.MAX_QUAD_LEVELS;
     this.tree = new QuadTree(state.world.bounds.clone(), this.maxObjects, this.maxLevels);
     this.bodies = [];
+    this.gravity = new Vector(0, 9.87);
     this._result = false;
     this._total = 0;
     this._overlap = 0;
@@ -8714,9 +8871,8 @@ inherit(Physics, Object, {
         var bods = this.bodies;
         for (var i = 0, il = bods.length, body; i < il; ++i) {
             body = bods[i];
-            body.computeVelocity(dt);
-            body.update(dt);
-            if (body.canCollide && body.sprite.visible) {
+            body.update(dt, this.gravity);
+            if (body.allowCollide && body.sprite.visible) {
                 this.tree.insert(body);
             }
         }
@@ -8735,22 +8891,12 @@ inherit(Physics, Object, {
             if (obj1 instanceof Sprite) {
                 if (obj2 instanceof Sprite) {
                     this._collideSpriteVsSprite(obj1, obj2, onCollision);
-                } else if (obj2 instanceof Tilemap) {
-                    this._collideSpriteVsTilemap(obj1, obj2, onCollision);
                 } else if (obj2 instanceof Container) {
                     this._collideSpriteVsContainer(obj1, obj2, onCollision);
-                }
-            } else if (obj1 instanceof Tilemap) {
-                if (obj2 instanceof Sprite) {
-                    this._collideSpriteVsTilemap(obj2, obj1, onCollision);
-                } else if (obj2 instanceof Container) {
-                    this._collideContainerVsTilemap(obj2, obj1, onCollision);
                 }
             } else if (obj1 instanceof Container) {
                 if (obj2 instanceof Sprite) {
                     this._collideSpriteVsContainer(obj2, obj1, onCollision);
-                } else if (obj2 instanceof Tilemap) {
-                    this._collideContainerVsTilemap(obj1, obj2, onCollision);
                 } else if (obj2 instanceof Container) {
                     this._collideContainerVsContainer(obj1, obj2, onCollision);
                 }
@@ -8781,7 +8927,7 @@ inherit(Physics, Object, {
         this._bounds2.y = b2.lastPos.y;
         this._bounds2.width = b2.width + (dx2 > 0 ? dx2 : -dx2);
         this._bounds2.height = b2.height;
-        if (this._bounds1.overlap(this._bounds2)) {
+        if (this._bounds1.overlaps(this._bounds2)) {
             this._maxOverlap = math.abs(dx1) + math.abs(dx2) + C.PHYSICS.OVERLAP_BIAS;
             if (dx1 > dx2) {
                 this._overlap = b1.right - b2.x;
@@ -8840,23 +8986,23 @@ inherit(Physics, Object, {
         this._bounds2.y = b2.y - (dy2 > 0 ? dy2 : 0);
         this._bounds2.width = b2.width;
         this._bounds2.height = b2.height + math.abs(dy2);
-        if (this._bounds1.overlap(this._bounds2)) {
+        if (this._bounds1.overlaps(this._bounds2)) {
             this._maxOverlap = math.abs(dy1) + math.abs(dy2) + C.PHYSICS.OVERLAP_BIAS;
             if (dy1 > dy2) {
                 this._overlap = b1.bottom - b2.y;
-                if (this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.DOWN) || !(b2.allowCollide & C.DIRECTION.UP)) {
+                if (this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.BOTTOM) || !(b2.allowCollide & C.DIRECTION.TOP)) {
                     this._overlap = 0;
                 } else {
-                    b1.touching |= C.DIRECTION.DOWN;
-                    b2.touching |= C.DIRECTION.UP;
+                    b1.touching |= C.DIRECTION.BOTTOM;
+                    b2.touching |= C.DIRECTION.TOP;
                 }
             } else if (dy1 < dy2) {
                 this._overlap = b1.y - b2.height - b2.y;
-                if (-this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.UP) || !(b2.allowCollide & C.DIRECTION.DOWN)) {
+                if (-this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.TOP) || !(b2.allowCollide & C.DIRECTION.BOTTOM)) {
                     this._overlap = 0;
                 } else {
-                    b1.touching |= C.DIRECTION.UP;
-                    b2.touching |= C.DIRECTION.DOWN;
+                    b1.touching |= C.DIRECTION.TOP;
+                    b2.touching |= C.DIRECTION.BOTTOM;
                 }
             }
         }
@@ -8898,25 +9044,10 @@ inherit(Physics, Object, {
             this._hit(sprite1, sprite2, onCollision);
         }
     },
-    _collideSpriteVsTilemap: function(sprite, tilemap, onCollision) {
-        this._mapData = tilemap.collisionLayer.getTileOverlaps(sprite);
-        for (var i = 0, il = this._mapData.length; i < il; ++i) {
-            this._hit(sprite, this._mapData[i].tile, onCollision);
-        }
-    },
-    _collideContainerVsTilemap: function(container, tilemap, onCollision) {
-        if (container.first._iNext) {
-            var node = container.first._iNext;
-            do {
-                if (node instanceof Sprite) this.collideSpriteVsTilemap(node, tilemap, onCollision);
-                node = node._iNext;
-            } while (node !== container.last._iNext);
-        }
-    },
     _collideSpriteVsContainer: function(sprite, container, onCollision) {
-        this._potentials = this.tree.retrieve(sprite);
+        this._potentials = this.tree.retrieve(sprite.body);
         for (var i = 0, il = this._potentials.length; i < il; ++i) {
-            if (this._potentials[i].sprite._container === container) {
+            if (this._spriteInChain(this._potentials[i].sprite, container)) {
                 this.separate(sprite.body, this._potentials[i]);
                 if (this._result) {
                     this._hit(sprite, container, onCollision);
@@ -8932,6 +9063,14 @@ inherit(Physics, Object, {
                 node = node._iNext;
             } while (node !== container1.last._iNext);
         }
+    },
+    _spriteInChain: function(spr, container) {
+        var c = spr._container;
+        while (c) {
+            if (c === container) return true;
+            c = c.parent;
+        }
+        return false;
     }
 });
 // uRequire: end body of original nodejs module
@@ -8978,9 +9117,6 @@ inherit(State, Container, {
         this.game.timings.cameraStart = this.game.clock.now();
         this.camera.update(dt);
         this.game.timings.cameraEnd = this.game.clock.now();
-        this.game.timings.worldStart = this.game.clock.now();
-        this.world.update(dt);
-        this.game.timings.worldEnd = this.game.clock.now();
         this.game.timings.physicsStart = this.game.clock.now();
         this.physics.update(dt);
         this.game.timings.physicsEnd = this.game.clock.now();
@@ -10152,15 +10288,21 @@ inherit(Game, Object, {
         this.timings.inputStart = this.clock.now();
         this.input.update(dt);
         this.timings.inputEnd = this.clock.now();
-        this.timings.userFuncsStart = this.clock.now();
-        this.emit("tick", dt);
-        this.timings.userFuncsEnd = this.clock.now();
         this.timings.stateStart = this.clock.now();
         this.state.active.update(dt);
         this.timings.stateEnd = this.clock.now();
+        this.timings.userFuncsStart = this.clock.now();
+        this.emit("tick", dt);
+        this.timings.userFuncsEnd = this.clock.now();
         this.timings.renderStart = this.clock.now();
         this.renderer.render(this.stage);
         this.timings.renderEnd = this.clock.now();
+    }
+});
+
+Object.defineProperty(Game.prototype, "physics", {
+    get: function() {
+        return this.state.active.physics;
     }
 });
 
@@ -10173,35 +10315,6 @@ Object.defineProperty(Game.prototype, "camera", {
 Object.defineProperty(Game.prototype, "world", {
     get: function() {
         return this.state.active.world;
-    }
-});
-// uRequire: end body of original nodejs module
-
-
-return module.exports;
-}
-);
-})(__global);
-(function (window) {
-  define('tilemap/Tile',['require', 'exports', 'module', '../display/Sprite', '../utils/inherit', '../constants'], 
-  function (require, exports, module) {
-  // uRequire: start body of original nodejs module
-var Sprite = require("../display/Sprite"), inherit = require("../utils/inherit"), C = require("../constants");
-
-var Tile = module.exports = function(texture) {
-    this.collisionType = C.COLLISION_TYPE.NONE;
-    Sprite.call(this, texture);
-    this.type = Sprite.TYPE.TILE;
-};
-
-inherit(Tile, Sprite, {
-    onCollision: function(obj) {
-        Sprite.prototype.onCollision.call(this, obj);
-        switch (this.collisionType) {
-          case C.COLLISION_TYPE.SOLID:
-            obj.setVelocity(0);
-            break;
-        }
     }
 });
 // uRequire: end body of original nodejs module

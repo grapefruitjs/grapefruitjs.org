@@ -5,8 +5,7 @@ var $demo = $('#demo'),
         width: width,
         height: height,
         transparent: true
-    }),
-    player;
+    });
 
 function setup() {
     //add the clouds
@@ -14,11 +13,10 @@ function setup() {
         game.world.add.obj(new Cloud(game));
     }
 
-    var map = game.world.add.tilemap('world', true);
+    gfdemo.map = game.world.add.tilemap('world', true);
+    gfdemo.player = gfdemo.map.findLayer('player').addChild(new Player(game));
 
-    map.findLayer('player').addChild(player = new Player(game));
-
-    game.camera.follow(player);
+    game.camera.follow(gfdemo.player);
 }
 
 function teardown() {
@@ -43,6 +41,12 @@ game.load.on('complete', function() {
 
 //start loading
 game.load.start();
+
+game.on('tick', function(dt) {
+    game.physics.collide(gfdemo.player, game.world, function(player, obj) {
+        player.onCollide(obj);
+    });
+});
 
 //expose game object for use elsewhere
 window.gfdemo = {

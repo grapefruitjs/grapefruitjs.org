@@ -39,6 +39,9 @@ function Player(game) {
     this.movement = new gf.Vector();
 
     this.bindKeys();
+
+    //anchor to middle
+    this.anchor.x = 0.5;
 }
 
 gf.inherit(Player, gf.AnimatedSprite, {
@@ -62,7 +65,7 @@ gf.inherit(Player, gf.AnimatedSprite, {
     bindKeys: function() {
         //bind the keyboard
         this.game.input.keyboard.on(gf.Keyboard.KEY.W, this._boundMoveUp = this.onMove.bind(this, 'up'));
-        this.game.input.keyboard.on(gf.Keyboard.KEY.S, this._boundMoveDown = this.onMove.bind(this, 'down'));
+        //this.game.input.keyboard.on(gf.Keyboard.KEY.S, this._boundMoveDown = this.onMove.bind(this, 'down'));
         this.game.input.keyboard.on(gf.Keyboard.KEY.A, this._boundMoveLeft = this.onMove.bind(this, 'left'));
         this.game.input.keyboard.on(gf.Keyboard.KEY.D, this._boundMoveRight = this.onMove.bind(this, 'right'));
     },
@@ -90,9 +93,14 @@ gf.inherit(Player, gf.AnimatedSprite, {
         this.setVelocity(this.movement);
         this.locked = false;
     },
+    isGrounded: function() {
+        return (this.body.touching & gf.DIRECTION.BOTTOM);
+    },
+    onCollide: function(obj) {
+        this._setMoveAnimation();
+    },
     _checkMovement: function() {
-        //doing this in an action status based way means that pressing two opposing
-        //keys at once and release one will still work (like pressing left & right, then releasing right)
+        //set X
         if(this.actions.move.left && this.actions.move.right)
             this.movement.x = 0;
         else if(this.actions.move.left)
@@ -102,26 +110,28 @@ gf.inherit(Player, gf.AnimatedSprite, {
         else
             this.movement.x = 0;
 
-        if(this.actions.move.up && this.actions.move.down)
-            this.movement.y = 0;
-        else if(this.actions.move.up)
-            this.movement.y = -this.moveSpeed;
-        else if(this.actions.move.down)
-            this.movement.y = this.moveSpeed;
+        if(this.actions.move.up && this.isGrounded())
+            this.movement.y = -this.moveSpeed * 2;
         else
             this.movement.y = 0;
 
         if(this.locked) return;
 
+        this.body.velocity.x = this.movement.x;
+
+        if(this.movement.y) {
+            this.body.velocity.y = this.movement.y;
+            this.body.touching &= ~gf.DIRECTION.BOTTOM;
+        }
+
         this._setMoveAnimation();
-        this.body.velocity.copy(this.movement);
     },
     _setMoveAnimation: function(force) {
         var anim;
 
         if(force) {
             anim = force;
-        } else if(this.movement.y) {
+        } else if(!this.isGrounded()) {
             anim = 'jump';
         } else if(this.movement.x) {
             anim = 'walk';
@@ -132,13 +142,12 @@ gf.inherit(Player, gf.AnimatedSprite, {
         if(this.movement.x) {
             if(this.movement.x > 0) {
                 this.scale.x = 1;
-                this.anchor.x = 0;
             } else {
                 this.scale.x = -1;
-                this.anchor.x = 1;
             }
         }
 
-        this.gotoAndPlay(anim);
+        if(this.currentAnimation !== anim)
+            this.gotoAndPlay(anim);
     }
 });
