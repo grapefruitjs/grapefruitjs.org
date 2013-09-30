@@ -28,6 +28,9 @@ gf.debug.gfVersion = '0.0.x';
 gf.debug.onTick = function() {
     this._super();
 
+    var dStart = gf.debug.game.clock.now(),
+        dEnd;
+
     gf.debug._statsTick();
 
     if(gf.debug.panels) {
@@ -35,6 +38,9 @@ gf.debug.onTick = function() {
         gf.debug.panels.performance.tick();
         gf.debug.panels.sprites.tick();
     }
+
+    dEnd = gf.debug.game.clock.now();
+    gf.debug.game.timings.__debugLastDiff = dEnd - dStart;
 };
 
 /**
@@ -312,9 +318,10 @@ gf.debug.PerformancePanel = function(game) {
             phys: 'rgba(80, 220, 200, 1)',
             user: 'rgba(200, 80, 220, 1)',
             draw: 'rgba(220, 80, 80, 1)',
+            debug: 'rgba(220, 220, 80, 1)',
             event: 'rgba(200, 200, 200, 0.6)'
         });
-        this.graph.max = 50;
+        this.graph.max = 30;
 
         return div;
     },
@@ -328,6 +335,7 @@ gf.debug.PerformancePanel = function(game) {
                 camera: t.cameraEnd - t.cameraStart,
                 phys: t.physicsEnd - t.physicsStart,
                 user: t.userFuncsEnd - t.userFuncsStart,
+                debug: t.__debugLastDiff || 0,
                 draw: t.renderEnd - t.renderStart
             },
             evt = this.eventQueue.shift();
