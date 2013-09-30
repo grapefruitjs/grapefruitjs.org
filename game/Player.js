@@ -28,8 +28,8 @@ function Player(game) {
     this.addAnim(anims, 'walk', 11);
 
     //call parent ctor
-    gf.AnimatedSprite.call(this, anims, 1, 'stand');
-    game.state.active.physics.addSprite(this);
+    gf.Sprite.call(this, anims, 1, 'stand');
+    game.physics.addSprite(this);
 
     //active actions
     this.actions = {
@@ -44,7 +44,7 @@ function Player(game) {
     this.anchor.x = 0.5;
 }
 
-gf.inherit(Player, gf.AnimatedSprite, {
+gf.inherit(Player, gf.Sprite, {
     addAnim: function(o, name, count) {
         if(!count) {
             o[name] = [this.atlas[this.type + name + '.png']];
@@ -71,7 +71,7 @@ gf.inherit(Player, gf.AnimatedSprite, {
     },
     onMove: function(dir, e) {
         if(e.originalEvent)
-            e.input.preventDefault(e.originalEvent);
+            e.originalEvent.preventDefault();
 
         // .down is keypressed down
         if(e.down) {
@@ -96,8 +96,9 @@ gf.inherit(Player, gf.AnimatedSprite, {
     isGrounded: function() {
         return (this.body.touching & gf.DIRECTION.BOTTOM);
     },
-    onCollide: function(obj) {
+    onCollide: function() {
         this._setMoveAnimation();
+        //console.log(this.body.y);
     },
     _checkMovement: function() {
         //set X
@@ -148,6 +149,6 @@ gf.inherit(Player, gf.AnimatedSprite, {
         }
 
         if(this.currentAnimation !== anim)
-            this.gotoAndPlay(anim);
+            this.goto(0, anim).play();
     }
 });

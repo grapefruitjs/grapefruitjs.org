@@ -13,10 +13,10 @@ function setup() {
         game.world.add.obj(new Cloud(game));
     }
 
-    gfdemo.map = game.world.add.tilemap('world', true);
-    gfdemo.player = gfdemo.map.findLayer('player').addChild(new Player(game));
+    window.map = game.world.add.tilemap('world', true);
+    window.player = window.map.findLayer('player').addChild(new Player(game));
 
-    game.camera.follow(gfdemo.player);
+    game.camera.follow(window.player);
 }
 
 function teardown() {
@@ -42,15 +42,14 @@ game.load.on('complete', function() {
 //start loading
 game.load.start();
 
-game.on('tick', function(dt) {
-    game.physics.collide(gfdemo.player, game.world, function(player, obj) {
+game.on('tick', function() {
+    game.physics.collide(window.player, game.world, function(player, obj) {
         player.onCollide(obj);
     });
 });
 
-//expose game object for use elsewhere
-window.gfdemo = {
-    game: game,
-    setup: setup,
-    teardown: teardown
-};
+window.setup = setup;
+window.teardown = teardown;
+window.game = game;
+
+gf.debug.show(game);

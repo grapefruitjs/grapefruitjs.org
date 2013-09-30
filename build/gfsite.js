@@ -4,7 +4,7 @@
  * Copyright (c) 2013, Chad Engler
  * https://github.com/grapefruitjs/grapefruitjs.org
  *
- * Compiled: 2013-09-22
+ * Compiled: 2013-09-29
  *
  * GrapeFruit Website is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
@@ -43,8 +43,8 @@ function Player(game) {
     this.addAnim(anims, 'walk', 11);
 
     //call parent ctor
-    gf.AnimatedSprite.call(this, anims, 1, 'stand');
-    game.state.active.physics.addSprite(this);
+    gf.Sprite.call(this, anims, 1, 'stand');
+    game.physics.addSprite(this);
 
     //active actions
     this.actions = {
@@ -59,7 +59,7 @@ function Player(game) {
     this.anchor.x = 0.5;
 }
 
-gf.inherit(Player, gf.AnimatedSprite, {
+gf.inherit(Player, gf.Sprite, {
     addAnim: function(o, name, count) {
         if(!count) {
             o[name] = [this.atlas[this.type + name + '.png']];
@@ -86,7 +86,7 @@ gf.inherit(Player, gf.AnimatedSprite, {
     },
     onMove: function(dir, e) {
         if(e.originalEvent)
-            e.input.preventDefault(e.originalEvent);
+            e.originalEvent.preventDefault();
 
         // .down is keypressed down
         if(e.down) {
@@ -111,8 +111,9 @@ gf.inherit(Player, gf.AnimatedSprite, {
     isGrounded: function() {
         return (this.body.touching & gf.DIRECTION.BOTTOM);
     },
-    onCollide: function(obj) {
+    onCollide: function() {
         this._setMoveAnimation();
+        //console.log(this.body.y);
     },
     _checkMovement: function() {
         //set X
@@ -163,7 +164,7 @@ gf.inherit(Player, gf.AnimatedSprite, {
         }
 
         if(this.currentAnimation !== anim)
-            this.gotoAndPlay(anim);
+            this.goto(0, anim).play();
     }
 });
 
@@ -172,7 +173,7 @@ function Cloud(game) {
 
     this.game = game;
 
-    this.speed = gf.math.randomInt(8, 20);
+    this.movespeed = gf.math.randomInt(10, 25);
 
     this._dx = 0;
 
@@ -184,7 +185,7 @@ function Cloud(game) {
 
 gf.inherit(Cloud, gf.Sprite, {
     updateTransform: function() {
-        this._dx += this.speed * this.game.timings.lastDelta;
+        this._dx += this.movespeed * this.game.timings.lastDelta;
 
         var dx = gf.math.floor(this._dx);
         if(dx) {
@@ -216,10 +217,10 @@ function setup() {
         game.world.add.obj(new Cloud(game));
     }
 
-    gfdemo.map = game.world.add.tilemap('world', true);
-    gfdemo.player = gfdemo.map.findLayer('player').addChild(new Player(game));
+    window.map = game.world.add.tilemap('world', true);
+    window.player = window.map.findLayer('player').addChild(new Player(game));
 
-    game.camera.follow(gfdemo.player);
+    game.camera.follow(window.player);
 }
 
 function teardown() {
@@ -245,19 +246,17 @@ game.load.on('complete', function() {
 //start loading
 game.load.start();
 
-game.on('tick', function(dt) {
-    game.physics.collide(gfdemo.player, game.world, function(player, obj) {
+game.on('tick', function() {
+    game.physics.collide(window.player, game.world, function(player, obj) {
         player.onCollide(obj);
     });
 });
 
-//expose game object for use elsewhere
-window.gfdemo = {
-    game: game,
-    setup: setup,
-    teardown: teardown
-};
+window.setup = setup;
+window.teardown = teardown;
+window.game = game;
 
+gf.debug.show(game);
 
     });
 })(jQuery, window);

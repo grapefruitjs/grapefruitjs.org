@@ -3,7 +3,7 @@ function Cloud(game) {
 
     this.game = game;
 
-    this.speed = gf.math.randomInt(8, 20);
+    this.movespeed = gf.math.randomInt(10, 25);
 
     this._dx = 0;
 
@@ -15,7 +15,7 @@ function Cloud(game) {
 
 gf.inherit(Cloud, gf.Sprite, {
     updateTransform: function() {
-        this._dx += this.speed * this.game.timings.lastDelta;
+        this._dx += this.movespeed * this.game.timings.lastDelta;
 
         var dx = gf.math.floor(this._dx);
         if(dx) {
