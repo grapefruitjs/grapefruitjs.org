@@ -42,11 +42,13 @@ game.load.on('complete', function() {
 //start loading
 game.load.start();
 
+/*
 game.on('tick', function() {
     game.physics.collide(window.player, game.world, function(player, obj) {
         player.onCollide(obj);
     });
 });
+*/
 
 window.setup = setup;
 window.teardown = teardown;

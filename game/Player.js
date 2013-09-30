@@ -96,7 +96,7 @@ gf.inherit(Player, gf.Sprite, {
     isGrounded: function() {
         return (this.body.touching & gf.DIRECTION.BOTTOM);
     },
-    onCollide: function() {
+    onCollision: function() {
         this._setMoveAnimation();
         //console.log(this.body.y);
     },

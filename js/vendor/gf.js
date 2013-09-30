@@ -465,6 +465,11 @@ define(
       BOTTOM: 8,
       ALL: 15
     },
+    SHAPE: {
+      CIRCLE: 1,
+      POLYGON: 2,
+      RECTANGLE: 3
+    },
     PHYSICS_TYPE: {
       STATIC: 0,
       KINEMATIC: 1,
@@ -755,6 +760,34 @@ define(
     negate: function () {
       return this.multiplyScalar(-1);
     },
+    project: function (v) {
+      var amt = this.dot(v) / v.len2();
+      this.x = amt * v.x;
+      this.y = amt * v.y;
+      return this;
+    },
+    projectN: function (v) {
+      var amt = this.dot(v);
+      this.x = amt * v.x;
+      this.y = amt * v.y;
+      return this;
+    },
+    reflect: function (axis) {
+      var x = this.x;
+      var y = this.y;
+      this.project(axis).scale(2);
+      this.x -= x;
+      this.y -= y;
+      return this;
+    },
+    reflectN: function (axis) {
+      var x = this.x;
+      var y = this.y;
+      this.projectN(axis).scale(2);
+      this.x -= x;
+      this.y -= y;
+      return this;
+    },
     dot: function (v) {
       return this.x * v.x + this.y * v.y;
     },
@@ -786,6 +819,12 @@ define(
       this.y += (v.y - this.y) * alpha;
       return this;
     },
+    perp: function () {
+      var x = this.x;
+      this.x = this.y;
+      this.y -= x;
+      return this;
+    },
     equals: function (v) {
       return v.x === this.x && v.y === this.y;
     },
@@ -797,6 +836,1114 @@ define(
     },
     clone: function () {
       return new Vector(this.x, this.y);
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'math/Circle',['require','exports','module','../utils/inherit','./Vector','../constants'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var inherit = require("../utils/inherit"), Vector = require("./Vector"), C = require("../constants");
+  var Circle = module.exports = function (x, y, radius) {
+      this.position = new Vector();
+      this.radius = radius || 0;
+      this.x = x || 0;
+      this.y = y || 0;
+      this._shapetype = C.SHAPE.CIRCLE;
+    };
+  inherit(Circle, Object, {
+    clone: function () {
+      return new Circle(this.x, this.y, this.radius);
+    },
+    contains: function (x, y) {
+      if (this.radius <= 0)
+        return false;
+      var dx = x - this.x, dy = y - this.y, r2 = this.radius * this.radius;
+      dx *= dx;
+      dy *= dy;
+      return dx + dy <= r2;
+    }
+  });
+  Object.defineProperty(Circle.prototype, "x", {
+    get: function () {
+      return this.position.x;
+    },
+    set: function (v) {
+      this.position.x = v;
+    }
+  });
+  Object.defineProperty(Circle.prototype, "y", {
+    get: function () {
+      return this.position.y;
+    },
+    set: function (v) {
+      this.position.y = v;
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'math/Polygon',['require','exports','module','../utils/inherit','./Vector','../constants'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var inherit = require("../utils/inherit"), Vector = require("./Vector"), C = require("../constants");
+  var Polygon = module.exports = function (x, y, points) {
+      this.position = new Vector();
+      this.points = null;
+      this.edges = [];
+      this.normals = [];
+      if (!(points instanceof Array))
+        points = Array.prototype.slice.call(arguments, 2);
+      if (typeof points[0] === "number") {
+        var p = [];
+        for (var i = 0, il = points.length; i < il; i += 2) {
+          p.push(new Vector(points[i], points[i + 1]));
+        }
+        points = p;
+      }
+      this.points = points;
+      this.x = x || 0;
+      this.y = y || 0;
+      this.recalc();
+      this._shapetype = C.SHAPE.POLYGON;
+    };
+  inherit(Polygon, Object, {
+    clone: function () {
+      var points = [];
+      for (var i = 0; i < this.points.length; i++) {
+        points.push(this.points[i].clone());
+      }
+      return new Polygon(points);
+    },
+    contains: function (x, y) {
+      var inside = false;
+      for (var i = 0, j = this.points.length - 1; i < this.points.length; j = i++) {
+        var xi = this.points[i].x, yi = this.points[i].y, xj = this.points[j].x, yj = this.points[j].y, intersect = yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi;
+        if (intersect)
+          inside = !inside;
+      }
+      return inside;
+    },
+    recalc: function () {
+      var points = this.points, len = points.length, p1, p2, e, n;
+      this.edges.length = this.normals.length = 0;
+      for (var i = 0; i < len; ++i) {
+        p1 = points[i];
+        p2 = i < len - 1 ? points[i + 1] : points[0];
+        e = p2.clone().sub(p1);
+        n = e.clone().perp().normalize();
+        this.edges.push(e);
+        this.normals.push(n);
+      }
+    }
+  });
+  Object.defineProperty(Polygon.prototype, "x", {
+    get: function () {
+      return this.position.x;
+    },
+    set: function (v) {
+      this.position.x = v;
+    }
+  });
+  Object.defineProperty(Polygon.prototype, "y", {
+    get: function () {
+      return this.position.y;
+    },
+    set: function (v) {
+      this.position.y = v;
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'math/Rectangle',['require','exports','module','../utils/inherit','./Polygon','./Vector','../constants'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var inherit = require("../utils/inherit"), Polygon = require("./Polygon"), Vector = require("./Vector"), C = require("../constants");
+  var Rectangle = module.exports = function (x, y, width, height) {
+      this.position = new Vector();
+      this.x = x || 0;
+      this.y = y || 0;
+      this._width = width || 0;
+      this._height = height || 0;
+      this.halfWidth = this._width / 2;
+      this.halfHeight = this._height / 2;
+      this._shapetype = C.SHAPE.RECTANGLE;
+    };
+  inherit(Rectangle, Object, {
+    clone: function () {
+      return new Rectangle(this.x, this.y, this._width, this._height);
+    },
+    contains: function (x, y) {
+      if (this._width <= 0 || this._height <= 0)
+        return false;
+      var x1 = this.x;
+      if (x >= x1 && x <= x1 + this._width) {
+        var y1 = this.y;
+        if (y >= y1 && y <= y1 + this._height) {
+          return true;
+        }
+      }
+      return false;
+    },
+    overlaps: function (rect) {
+      return this.right > rect.x && this.x < rect.right && this.bottom > rect.y && this.y < rect.bottom;
+    },
+    toPolygon: function () {
+      return new Polygon(this.x, this.y, [
+        new Vector(),
+        new Vector(this.width, 0),
+        new Vector(this.width, this.height),
+        new Vector(0, this.height)
+      ]);
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "x", {
+    get: function () {
+      return this.position.x;
+    },
+    set: function (v) {
+      this.position.x = v;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "y", {
+    get: function () {
+      return this.position.y;
+    },
+    set: function (v) {
+      this.position.y = v;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "width", {
+    get: function () {
+      return this._width;
+    },
+    set: function (w) {
+      this._width = w || 0;
+      this.halfWidth = this._width / 2;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "height", {
+    get: function () {
+      return this._height;
+    },
+    set: function (h) {
+      this._height = h || 0;
+      this.halfHeight = this._height / 2;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "right", {
+    get: function () {
+      return this.x + this._width;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "left", {
+    get: function () {
+      return this.x;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "top", {
+    get: function () {
+      return this.y;
+    }
+  });
+  Object.defineProperty(Rectangle.prototype, "bottom", {
+    get: function () {
+      return this.y + this._height;
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'utils/utils',['require','exports','module','../math/Vector','../math/Circle','../math/Rectangle','../math/Polygon'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var Vector = require("../math/Vector"), Circle = require("../math/Circle"), Rectangle = require("../math/Rectangle"), Polygon = require("../math/Polygon");
+  var utils = module.exports = {
+      _arrayDelim: /[|,]/,
+      noop: function () {
+      },
+      getAbsoluteUrl: function (url) {
+        var a = document.createElement("a");
+        a.href = url;
+        return a.href;
+      },
+      ajax: function (sets) {
+        sets = sets || {};
+        sets.method = sets.method || "GET";
+        sets.dataType = sets.dataType || "text";
+        if (!sets.url)
+          throw "No URL passed to ajax";
+        sets.progress = sets.progress || utils.noop;
+        sets.load = sets.load || utils.noop;
+        sets.error = sets.error || utils.noop;
+        sets.abort = sets.abort || utils.noop;
+        sets.complete = sets.complete || utils.noop;
+        var xhr = utils.createAjaxRequest(), protocol = utils.getAbsoluteUrl(sets.url).split("/")[0];
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            var res = xhr.response || xhr.responseText, err = null;
+            if (protocol !== "file:" && xhr.status !== 200)
+              err = "Non-200 status code returned: " + xhr.status;
+            if (!err && typeof res === "string") {
+              if (sets.dataType === "json") {
+                try {
+                  res = JSON.parse(res);
+                } catch (e) {
+                  err = e;
+                }
+              } else if (sets.dataType === "xml") {
+                try {
+                  res = utils.parseXML(res);
+                } catch (e) {
+                  err = e;
+                }
+              }
+            }
+            if (err) {
+              if (sets.error)
+                sets.error.call(xhr, err);
+            } else {
+              if (sets.load)
+                sets.load.call(xhr, res);
+            }
+          }
+        };
+        if (sets.dataType !== "json" && sets.dataType !== "xml")
+          xhr.responseType = sets.dataType;
+        else
+          xhr.responseType = "text";
+        xhr.open(sets.method, sets.url, true);
+        xhr.send();
+        return xhr;
+      },
+      createAjaxRequest: function () {
+        var activexmodes = [
+            "Msxml2.XMLHTTP",
+            "Microsoft.XMLHTTP"
+          ];
+        if (window.ActiveXObject) {
+          for (var i = 0; i < activexmodes.length; i++) {
+            try {
+              return new window.ActiveXObject(activexmodes[i]);
+            } catch (e) {
+            }
+          }
+        } else if (window.XMLHttpRequest) {
+          return new XMLHttpRequest();
+        } else {
+          return false;
+        }
+      },
+      setValues: function (obj, values) {
+        if (!values)
+          return;
+        for (var key in values) {
+          var newVal = values[key];
+          if (newVal === undefined) {
+            continue;
+          }
+          if (key in obj) {
+            var curVal = obj[key];
+            if (typeof curVal === "number" && typeof newVal === "string") {
+              var n;
+              if (newVal.indexOf("0x") === 0)
+                n = parseInt(newVal, 16);
+              else
+                n = parseInt(newVal, 10);
+              if (!isNaN(n))
+                obj[key] = n;
+            } else if (curVal instanceof Vector && newVal instanceof Array) {
+              curVal.set(parseFloat(newVal[0], 10) || 0, parseFloat(newVal[1], 10) || parseFloat(newVal[0], 10) || 0);
+            } else if (curVal instanceof Vector && typeof newVal === "string") {
+              var a = newVal.split(utils._arrayDelim, 2);
+              curVal.set(parseFloat(a[0], 10) || 0, parseFloat(a[1], 10) || parseFloat(a[0], 10) || 0);
+            } else if (curVal instanceof Vector && typeof newVal === "number") {
+              curVal.set(newVal, newVal);
+            } else if (curVal.x !== undefined && newVal instanceof Array) {
+              curVal.x = parseFloat(newVal[0], 10) || 0;
+              curVal.y = parseFloat(newVal[1], 10) || parseFloat(newVal[0], 10) || 0;
+            } else if (curVal.x !== undefined && typeof newVal === "string") {
+              var a2 = newVal.split(utils._arrayDelim, 2);
+              curVal.x = parseFloat(a2[0], 10) || 0;
+              curVal.y = parseFloat(a2[1], 10) || parseFloat(a2[0], 10) || 0;
+            } else if (curVal.x !== undefined && typeof newVal === "number") {
+              curVal.x = newVal;
+              curVal.y = newVal;
+            } else if (curVal instanceof Array && typeof newVal === "string") {
+              obj[key] = newVal.split(utils._arrayDelim);
+              for (var i = 0, il = obj[key].length; i < il; ++i) {
+                var val = obj[key][i];
+                if (!isNaN(val))
+                  obj[key][i] = parseFloat(val, 10);
+              }
+            } else {
+              obj[key] = newVal;
+            }
+          }
+        }
+        return obj;
+      },
+      extend: function () {
+        var src, copyIsArray, copy, name, options, clone, target = arguments[0] || {}, i = 1, length = arguments.length, deep = false;
+        if (typeof target === "boolean") {
+          deep = target;
+          target = arguments[1] || {};
+          i = 2;
+        }
+        if (typeof target !== "object" && typeof target !== "function") {
+          target = {};
+        }
+        for (; i < length; i++) {
+          options = arguments[i];
+          if (options !== null && options !== undefined) {
+            for (name in options) {
+              src = target[name];
+              copy = options[name];
+              if (target === copy) {
+                continue;
+              }
+              if (deep && copy && (utils.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+                if (copyIsArray) {
+                  copyIsArray = false;
+                  clone = src && Array.isArray(src) ? src : [];
+                } else {
+                  clone = src && utils.isPlainObject(src) ? src : {};
+                }
+                target[name] = utils.extend(deep, clone, copy);
+              } else if (copy !== undefined) {
+                target[name] = copy;
+              }
+            }
+          }
+        }
+        return target;
+      },
+      isPlainObject: function (obj) {
+        if (typeof obj !== "object" || obj.nodeType || obj === obj.window) {
+          return false;
+        }
+        try {
+          if (obj.constructor && !Object.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
+            return false;
+          }
+        } catch (e) {
+          return false;
+        }
+        return true;
+      },
+      getOffset: function (element) {
+        var box = element.getBoundingClientRect(), clientTop = element.clientTop || document.body.clientTop || 0, clientLeft = element.clientLeft || document.body.clientLeft || 0, scrollTop = window.pageYOffset || element.scrollTop || document.body.scrollTop, scrollLeft = window.pageXOffset || element.scrollLeft || document.body.scrollLeft;
+        return new Vector(box.left + scrollLeft - clientLeft, box.top + scrollTop - clientTop);
+      },
+      parseHitArea: function (hv) {
+        var ha;
+        if (hv.length % 2 !== 0 && hv.length !== 3) {
+          throw "Strange number of values for hitArea! Should be a flat array of values, like: [x,y,r] for a circle, [x,y,w,h] for a rectangle, or [x,y,x,y,...] for other polygons.";
+        }
+        if (hv.length === 3) {
+          ha = new Circle(hv[0], hv[1], hv[2]);
+        } else if (hv.length === 4) {
+          ha = new Rectangle(hv[0], hv[1], hv[2], hv[3]);
+        } else {
+          ha = new Polygon(hv);
+        }
+        return ha;
+      },
+      parseTiledProperties: function (obj) {
+        if (!obj || obj.__tiledparsed)
+          return obj;
+        for (var k in obj) {
+          var v = obj[k];
+          if (!isNaN(v))
+            obj[k] = parseFloat(v, 10);
+          else if (v === "true")
+            obj[k] = true;
+          else if (v === "false")
+            obj[k] = false;
+          else {
+            try {
+              v = JSON.parse(v);
+              obj[k] = v;
+            } catch (e) {
+            }
+          }
+        }
+        if (obj.hitArea)
+          obj.hitArea = utils.parseHitArea(obj.hitArea);
+        if (obj.static || obj.sensor) {
+          obj.mass = Infinity;
+          obj.inertia = Infinity;
+        }
+        obj.__tiledparsed = true;
+        return obj;
+      },
+      log: window.console && window.console.log,
+      warn: window.console && window.console.warn,
+      error: window.console && window.console.error
+    };
+  if (typeof window.DOMParser !== "undefined") {
+    utils.parseXML = function (xmlStr) {
+      return new window.DOMParser().parseFromString(xmlStr, "text/xml");
+    };
+  } else if (typeof window.ActiveXObject !== "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
+    utils.parseXML = function (xmlStr) {
+      var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
+      xmlDoc.async = "false";
+      xmlDoc.loadXML(xmlStr);
+      return xmlDoc;
+    };
+  } else {
+    utils.warn("XML parser not available, trying to parse any XML will result in an error.");
+    utils.parseXML = function () {
+      throw "Trying to parse XML, but not XML parser is available in this environment";
+    };
+  }
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'utils/support',['require','exports','module'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var support = module.exports = {
+      ua: window.navigator ? window.navigator.userAgent.toLowerCase() : "nodejs",
+      canvas: function () {
+        try {
+          return !!window.CanvasRenderingContext2D && !!document.createElement("canvas").getContext("2d");
+        } catch (e) {
+          return false;
+        }
+      }(),
+      webgl: function () {
+        try {
+          return !!window.WebGLRenderingContext && !!document.createElement("canvas").getContext("experimental-webgl");
+        } catch (e) {
+          return false;
+        }
+      }(),
+      workers: !!window.Worker,
+      blobUrls: !!window.Blob && !!window.URL && !!window.URL.createObjectURL,
+      typedArrays: !!window.ArrayBuffer,
+      fileapi: !!window.File && !!window.FileReader && !!window.FileList && !!window.Blob,
+      webAudio: !!window.AudioContext || !!window.webkitAudioContext || !!window.mozAudioContext,
+      htmlAudio: !!document.createElement("audio").canPlayType,
+      localStorage: !!window.localStorage,
+      touch: "createTouch" in document || "ontouchstart" in window || navigator.isCocoonJS,
+      gamepad: !!navigator.webkitGetGamepads || !!navigator.webkitGamepads || navigator.userAgent.indexOf("Firefox/") !== -1
+    };
+  var audioTest = new Audio();
+  support.codec = {
+    mp3: !!audioTest.canPlayType("audio/mpeg;").replace(/^no$/, ""),
+    opus: !!audioTest.canPlayType("audio/ogg; codecs=\"opus\"").replace(/^no$/, ""),
+    ogg: !!audioTest.canPlayType("audio/ogg; codecs=\"vorbis\"").replace(/^no$/, ""),
+    wav: !!audioTest.canPlayType("audio/wav; codecs=\"1\"").replace(/^no$/, ""),
+    m4a: !!(audioTest.canPlayType("audio/x-m4a;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
+    webm: !!audioTest.canPlayType("audio/webm; codecs=\"vorbis\"").replace(/^no$/, "")
+  };
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'audio/AudioPlayer',['require','exports','module','./AudioPlayer','../utils/EventEmitter','../utils/utils','../utils/inherit','../utils/support'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var AudioPlayer = require("./AudioPlayer"), EventEmitter = require("../utils/EventEmitter"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), support = require("../utils/support");
+  var AudioPlayer = module.exports = function (manager, audio, settings) {
+      EventEmitter.call(this);
+      this.src = "";
+      this.game = manager.game;
+      this.key = audio.key;
+      this.autoplay = false;
+      this.format = null;
+      this.loop = false;
+      this.pos3d = [
+        0,
+        0,
+        -0.5
+      ];
+      this.sprite = {};
+      Object.defineProperty(this, "volume", {
+        get: this.getVolume.bind(this),
+        set: this.setVolume.bind(this)
+      });
+      this._file = audio;
+      this._volume = 1;
+      this._duration = 0;
+      this._loaded = false;
+      this._manager = manager;
+      this._webAudio = support.webAudio;
+      this._nodes = [];
+      this._onendTimer = [];
+      utils.setValues(this, settings);
+      if (this._webAudio) {
+        this._setupAudioNode();
+      }
+      this.load();
+    };
+  inherit(AudioPlayer, Object, {
+    load: function () {
+      var self = this, audio = this._file;
+      if (audio.webAudio) {
+        if (!audio.decoded) {
+          this.ctx.decodeAudioData(audio.data, function (buffer) {
+            if (buffer) {
+              audio.data = buffer;
+              audio.decoded = true;
+              self.loadSoundBuffer(buffer);
+            }
+          });
+        } else {
+          this.loadSoundBuffer(audio.data);
+        }
+      } else {
+        var node = audio.data.cloneNode();
+        this._nodes.push(node);
+        node._pos = 0;
+        node.volume = this._manager.muted ? 0 : this._volume * this._manager.volume;
+        this._duration = node.duration;
+        this.sprite._default = [
+          0,
+          node.duration * 1000
+        ];
+        if (!this._loaded) {
+          this._loaded = true;
+          this.emit("load", {
+            message: "Audio file loaded.",
+            data: this.src
+          });
+        }
+        if (this.autoplay) {
+          this.play();
+        }
+      }
+      return this;
+    },
+    play: function (sprite, cb) {
+      var self = this;
+      if (typeof sprite === "function") {
+        cb = sprite;
+        sprite = null;
+      }
+      if (!sprite) {
+        sprite = "_default";
+      }
+      if (!this._loaded) {
+        this.on("load", function () {
+          self.play(sprite, cb);
+        });
+        return this;
+      }
+      if (!this.sprite[sprite]) {
+        if (typeof cb === "function")
+          cb();
+        return this;
+      }
+      this._inactiveNode(function (node) {
+        var pos = node._pos > 0 ? node._pos : self.sprite[sprite][0] / 1000, duration = self.sprite[sprite][1] / 1000 - node._pos, loop = self.loop || self.sprite[sprite][2], soundId = typeof cb === "string" ? cb : Math.round(Date.now() * Math.random()) + "", timerId;
+        node._sprite = sprite;
+        (function (o) {
+          timerId = setTimeout(function () {
+            if (!self._webAudio && o.loop) {
+              self.stop(o.id, o.timer).play(o.sprite, o.id);
+            }
+            if (self._webAudio && !o.loop) {
+              self._nodeById(o.id).paused = true;
+            }
+            if (!self._webAudio && !o.loop) {
+              self.stop(o.id, o.timer);
+            }
+            self.emit("end", {
+              message: "Audio has finished playing",
+              data: o.id
+            });
+          }, duration * 1000);
+          self._onendTimer.push(timerId);
+          o.timer = timerId;
+        }({
+          id: soundId,
+          sprite: sprite,
+          loop: loop
+        }));
+        if (self._webAudio) {
+          node.id = soundId;
+          node.paused = false;
+          self.refreshBuffer([
+            loop,
+            pos,
+            duration
+          ], soundId);
+          self._playStart = self._manager.ctx.currentTime;
+          node.gain.value = self._volume;
+          if (typeof node.bufferSource.start === "undefined") {
+            node.bufferSource.noteGrainOn(0, pos, duration);
+          } else {
+            node.bufferSource.start(0, pos, duration);
+          }
+        } else {
+          if (node.readyState === 4) {
+            node.id = soundId;
+            node.currentTime = pos;
+            node.muted = self._manager.muted;
+            node.volume = self._volume * self._manager.volume;
+            node.play();
+          } else {
+            self._clearEndTimer(timerId);
+            (function () {
+              var sound = self, playSpr = sprite, fn = cb, newNode = node;
+              var evt = function () {
+                sound.play(playSpr, fn);
+                newNode.removeEventListener("canplaythrough", evt, false);
+              };
+              newNode.addEventListener("canplaythrough", evt, false);
+            }());
+            return self;
+          }
+        }
+        self.emit("play", {
+          message: "Playing audio file",
+          data: soundId
+        });
+        if (typeof cb === "function")
+          cb(soundId);
+      });
+      return this;
+    },
+    pause: function (id, timerId) {
+      var self = this;
+      if (!this._loaded) {
+        this.on("play", function () {
+          self.play(id);
+        });
+        return this;
+      }
+      this._clearEndTimer(timerId || 0);
+      var activeNode = id ? this._nodeById(id) : this._activeNode();
+      if (activeNode) {
+        if (this._webAudio) {
+          if (!activeNode.bufferSource)
+            return this;
+          activeNode.paused = true;
+          activeNode._pos += this._manager.ctx.currentTime - this._playStart;
+          if (typeof activeNode.bufferSource.stop === "undefined") {
+            activeNode.bufferSource.noteOff(0);
+          } else {
+            activeNode.bufferSource.stop(0);
+          }
+        } else {
+          activeNode._pos = activeNode.currentTime;
+          activeNode.pause();
+        }
+      }
+      this.emit("pause", {
+        message: "Audio file paused",
+        data: id
+      });
+      return this;
+    },
+    stop: function (id, timerId) {
+      var self = this;
+      if (!this._loaded) {
+        this.on("play", function () {
+          self.stop(id);
+        });
+        return this;
+      }
+      this._clearEndTimer(timerId || 0);
+      var activeNode = id ? this._nodeById(id) : this._activeNode();
+      if (activeNode) {
+        activeNode._pos = 0;
+        if (this._webAudio) {
+          if (!activeNode.bufferSource)
+            return this;
+          activeNode.paused = true;
+          if (typeof activeNode.bufferSource.stop === "undefined") {
+            activeNode.bufferSource.noteOff(0);
+          } else {
+            activeNode.bufferSource.stop(0);
+          }
+        } else {
+          activeNode.pause();
+          activeNode.currentTime = 0;
+        }
+      }
+      return this;
+    },
+    mute: function (id) {
+      return this.setMuted(true, id);
+    },
+    unmute: function (id) {
+      return this.setMuted(false, id);
+    },
+    setMuted: function (muted, id) {
+      var self = this;
+      if (!this._loaded) {
+        this.on("play", function () {
+          self.setMuted(muted, id);
+        });
+        return this;
+      }
+      var activeNode = id ? this._nodeById(id) : this._activeNode();
+      if (activeNode) {
+        if (this._webAudio) {
+          activeNode.gain.value = muted ? 0 : this._volume;
+        } else {
+          activeNode.volume = muted ? 0 : this._volume;
+        }
+      }
+      return this;
+    },
+    seek: function (pos, id) {
+      var self = this;
+      if (!this._loaded) {
+        this.on("load", function () {
+          self.seek(pos);
+        });
+        return this;
+      }
+      if (!pos || pos < 0)
+        pos = 0;
+      var activeNode = id ? this._nodeById(id) : this._activeNode();
+      if (activeNode) {
+        if (this._webAudio) {
+          activeNode._pos = pos;
+          this.pause(activeNode.id).play(activeNode._sprite, id);
+        } else {
+          activeNode.currentTime = pos;
+        }
+      }
+      return this;
+    },
+    getPosition: function (id) {
+      var self = this;
+      if (!this._loaded) {
+        this.on("load", function () {
+          self.getPosition(id);
+        });
+        return this;
+      }
+      var activeNode = id ? this._nodeById(id) : this._activeNode();
+      if (activeNode) {
+        if (this._webAudio) {
+          return activeNode._pos + (this._manager.ctx.currentTime - this._playStart);
+        } else {
+          return activeNode.currentTime;
+        }
+      }
+      return 0;
+    },
+    fade: function (from, to, len, id, cb) {
+      var self = this, diff = Math.abs(from - to), dir = from > to ? "dowm" : "up", steps = diff / 0.01, stepTime = len / steps;
+      if (typeof id === "function") {
+        cb = id;
+        id = null;
+      }
+      if (!this._loaded) {
+        this.on("load", function () {
+          self.fade(from, to, len, id, cb);
+        });
+        return this;
+      }
+      this.setVolume(from, id);
+      for (var i = 1; i <= steps; ++i) {
+        var change = this._volume + (dir === "up" ? 0.01 : -0.01) * i, vol = Math.round(1000 * change) / 1000, wait = stepTime * i;
+        this._doFadeStep(vol, wait, to, id, cb);
+      }
+    },
+    getVolume: function () {
+      return this._volume;
+    },
+    setVolume: function (vol, id) {
+      var self = this;
+      vol = parseFloat(vol);
+      if (!this._loaded) {
+        this.on("play", function () {
+          self.setVolume(vol, id);
+        });
+        return this;
+      }
+      if (vol >= 0 && vol <= 1) {
+        this._volume = vol;
+        var activeNode = id ? this._nodeById(id) : this._activeNode();
+        if (activeNode) {
+          if (this._webAudio) {
+            activeNode.gain.volume = vol;
+          } else {
+            activeNode.volume = vol * this._manager.volume;
+          }
+        }
+      }
+      return this;
+    },
+    setPosition: function (x, y, z, id) {
+      var self = this;
+      x = !x ? 0 : x;
+      y = !y ? 0 : y;
+      z = !z && z !== 0 ? -0.5 : z;
+      if (!this._loaded) {
+        this.on("play", function () {
+          self.setPosition(x, y, z, id);
+        });
+        return this;
+      }
+      if (this._webAudio) {
+        var activeNode = id ? this._nodeById(id) : this._activeNode();
+        if (activeNode) {
+          this.pos3d[0] = x;
+          this.pos3d[1] = y;
+          this.pos3d[2] = z;
+          activeNode.panner.setPosition(x, y, z);
+        }
+      }
+      return this;
+    },
+    _doFadeStep: function (vol, wait, end, id, cb) {
+      var self = this;
+      setTimeout(function () {
+        self.setVolume(vol, id);
+        if (vol === end) {
+          if (typeof cb === "function")
+            cb();
+        }
+      }, wait);
+    },
+    _nodeById: function (id) {
+      var node = this._nodes[0];
+      for (var i = 0, il = this._nodes.length; i < il; ++i) {
+        if (this._nodes[i].id === id) {
+          node = this._nodes[i];
+          break;
+        }
+      }
+      return node;
+    },
+    _activeNode: function () {
+      var node;
+      for (var i = 0, il = this._nodes.length; i < il; ++i) {
+        if (!this._nodes[i].paused) {
+          node = this._nodes[i];
+          break;
+        }
+      }
+      this._drainPool();
+      return node;
+    },
+    _inactiveNode: function (cb) {
+      var node;
+      for (var i = 0, il = this._nodes.length; i < il; ++i) {
+        if (this._nodes[i].paused && this._nodes[i].readyState === 4) {
+          cb(node = this._nodes[i]);
+          break;
+        }
+      }
+      this._drainPool();
+      if (node)
+        return;
+      if (this._webAudio) {
+        node = this._setupAudioNode();
+        cb(node);
+      } else {
+        this.load();
+        node = this._nodes[this.nodes.length - 1];
+        node.addEventListener("loadedmetadata", function () {
+          cb(node);
+        });
+      }
+    },
+    _drainPool: function () {
+      var inactive = 0, i = 0, il = 0;
+      for (i = 0, il = this._nodes.length; i < il; ++i) {
+        if (this._nodes[i].paused) {
+          inactive++;
+        }
+      }
+      for (i = this._nodes.length; i >= 0; --i) {
+        if (inactive <= 5)
+          break;
+        if (this._nodes[i].paused) {
+          inactive--;
+          this._nodes.splice(i, 1);
+        }
+      }
+    },
+    _clearEndTimer: function (timerId) {
+      var timer = this._onendTimer.indexOf(timerId);
+      timer = timer >= 0 ? timer : 0;
+      if (this._onendTimer[timer]) {
+        clearTimeout(this._onendTimer[timer]);
+        this._onendTimer.splice(timer, 1);
+      }
+    },
+    _setupAudioNode: function () {
+      var node = this._nodes, i = this._nodes.length;
+      node.push(typeof this._manager.ctx.createGain === "undefined" ? this._manager.ctx.createGainNode : this._manager.ctx.createGain());
+      node[i].gain.value = this._volume;
+      node[i].paused = true;
+      node[i]._pos = 0;
+      node[i].readyState = 4;
+      node[i].connect(this._manager.masterGain);
+      node[i].panner = this._manager.ctx.createPanner();
+      node[i].panner.setPosition(this.pos3d[0], this.pos3d[1], this.pos3d[2]);
+      node[i].panner.connect(node[i]);
+      return node[i];
+    },
+    loadSoundBuffer: function (buffer) {
+      this._duration = buffer ? buffer.duration : this._duration;
+      this.sprite._default = [
+        0,
+        this._duration * 1000
+      ];
+      if (!this._loaded) {
+        this._loaded = true;
+        this.emit("load", {
+          message: "Audio file loaded.",
+          data: this.src
+        });
+      }
+      if (this.autoplay) {
+        this.play();
+      }
+    },
+    refreshBuffer: function (loop, id) {
+      var node = this._nodeById(id);
+      node.bufferSource = this._manager.ctx.createBufferSource();
+      node.bufferSource.buffer = this._file.data;
+      node.bufferSource.connect(node.panner);
+      node.bufferSource.loop = loop[0];
+      if (loop[0]) {
+        node.bufferSource.loopStart = loop[1];
+        node.bufferSource.loopEnd = loop[1] + loop[2];
+      }
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'audio/AudioManager',['require','exports','module','./AudioPlayer','../utils/inherit','../utils/support'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var AudioPlayer = require("./AudioPlayer"), inherit = require("../utils/inherit"), support = require("../utils/support");
+  var __AudioCtx = window.AudioContext || window.webkitAudioContext || window.mozAudioContext, __audioctx = support.webAudio ? new __AudioCtx() : null;
+  var AudioManager = module.exports = function (game, parent) {
+      this.game = game;
+      this.parent = parent;
+      this._muted = false;
+      this._volume = 1;
+      Object.defineProperty(this, "volume", {
+        get: this.getVolume.bind(this),
+        set: this.setVolume.bind(this)
+      });
+      this.ctx = __audioctx;
+      this.canPlay = support.webAudio || support.htmlAudio;
+      if (support.webAudio) {
+        this.masterGain = this.ctx.createGain ? this.ctx.createGain() : this.ctx.createGainNode();
+        this.masterGain.gain.value = 1;
+        this.setParent(parent);
+      }
+      this.sounds = {};
+    };
+  inherit(AudioManager, Object, {
+    getVolume: function () {
+      return this._volume;
+    },
+    setVolume: function (v) {
+      v = parseFloat(v, 10);
+      if (!isNaN(v) && v >= 0 && v <= 1) {
+        this._volume = v;
+        if (support.webAudio)
+          this.masterGain.gain.value = v;
+        for (var key in this.sounds) {
+          if (this.sounds.hasOwnProperty(key) && this.sounds[key]._webAudio === false) {
+            var player = this.sounds[key];
+            for (var i = 0, il = player._nodes.length; i < il; ++i) {
+              player._nodes[i].volume = player._volume * this._volume;
+            }
+          }
+        }
+      }
+    },
+    mute: function () {
+      return this.setMuted(true);
+    },
+    unmute: function () {
+      return this.setMuted(false);
+    },
+    setMuted: function (m) {
+      this._muted = m = !!m;
+      if (support.webAudio)
+        this.masterGain.gain.value = m ? 0 : this._volume;
+      for (var key in this.sounds) {
+        if (this.sounds.hasOwnProperty(key) && this.sounds[key]._webAudio === false) {
+          var player = this.sounds[key];
+          for (var i = 0, il = player._nodes.length; i < il; ++i) {
+            player._nodes[i].mute();
+          }
+        }
+      }
+      return this;
+    },
+    setParent: function (parent) {
+      this.parent = parent;
+      if (support.webAudio) {
+        if (parent && parent.masterGain) {
+          this.masterGain.connect(parent.masterGain);
+        } else {
+          this.masterGain.connect(this.ctx.destination);
+        }
+      }
+    },
+    attach: function (sound) {
+      this.sounds[sound.key] = sound;
+      sound._manager = this;
+      if (support.webAudio) {
+        for (var i = 0; i < sound._nodes.length; ++i) {
+          sound._nodes[i].disconnect();
+          sound._nodes[i].connect(this.masterGain);
+        }
+      }
+    },
+    add: function (key, settings) {
+      if (!this.canPlay) {
+        return false;
+      }
+      var audio = this.game.cache.getAudio(key);
+      if (!audio.player)
+        audio.player = new AudioPlayer(this, audio, settings);
+      return this.sounds[key] = audio.player;
+    },
+    remove: function (key) {
+      var audio = this.sounds[key];
+      if (audio) {
+        audio.stop();
+      }
+      delete this.sounds[key];
     }
   });
 // uRequire v0.6.1: END body of original nodejs module
@@ -6313,985 +7460,6 @@ return module.exports;
 }
 );
 define(
-  'math/Circle',['require','exports','module','../vendor/pixi'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  module.exports = require("../vendor/pixi").Circle;
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'math/Rectangle',['require','exports','module','../utils/inherit'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  var inherit = require("../utils/inherit");
-  var Rectangle = module.exports = function (x, y, width, height) {
-      this.x = x || 0;
-      this.y = y || 0;
-      this._width = width || 0;
-      this._height = height || 0;
-      this.halfWidth = this._width / 2;
-      this.halfHeight = this._height / 2;
-    };
-  inherit(Rectangle, Object, {
-    clone: function () {
-      return new Rectangle(this.x, this.y, this._width, this._height);
-    },
-    contains: function (x, y) {
-      if (this._width <= 0 || this._height <= 0)
-        return false;
-      var x1 = this.x;
-      if (x >= x1 && x <= x1 + this._width) {
-        var y1 = this.y;
-        if (y >= y1 && y <= y1 + this._height) {
-          return true;
-        }
-      }
-      return false;
-    },
-    overlaps: function (rect) {
-      return this.right > rect.x && this.x < rect.right && this.bottom > rect.y && this.y < rect.bottom;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "width", {
-    get: function () {
-      return this._width;
-    },
-    set: function (w) {
-      this._width = w || 0;
-      this.halfWidth = this._width / 2;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "height", {
-    get: function () {
-      return this._height;
-    },
-    set: function (h) {
-      this._height = h || 0;
-      this.halfHeight = this._height / 2;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "right", {
-    get: function () {
-      return this.x + this._width;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "left", {
-    get: function () {
-      return this.x;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "top", {
-    get: function () {
-      return this.y;
-    }
-  });
-  Object.defineProperty(Rectangle.prototype, "bottom", {
-    get: function () {
-      return this.y + this._height;
-    }
-  });
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'math/Polygon',['require','exports','module','../vendor/pixi'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  module.exports = require("../vendor/pixi").Polygon;
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'utils/utils',['require','exports','module','../math/Vector','../math/Circle','../math/Rectangle','../math/Polygon'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  var Vector = require("../math/Vector"), Circle = require("../math/Circle"), Rectangle = require("../math/Rectangle"), Polygon = require("../math/Polygon");
-  var utils = module.exports = {
-      _arrayDelim: /[|,]/,
-      noop: function () {
-      },
-      getAbsoluteUrl: function (url) {
-        var a = document.createElement("a");
-        a.href = url;
-        return a.href;
-      },
-      ajax: function (sets) {
-        sets = sets || {};
-        sets.method = sets.method || "GET";
-        sets.dataType = sets.dataType || "text";
-        if (!sets.url)
-          throw "No URL passed to ajax";
-        sets.progress = sets.progress || utils.noop;
-        sets.load = sets.load || utils.noop;
-        sets.error = sets.error || utils.noop;
-        sets.abort = sets.abort || utils.noop;
-        sets.complete = sets.complete || utils.noop;
-        var xhr = utils.createAjaxRequest(), protocol = utils.getAbsoluteUrl(sets.url).split("/")[0];
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            var res = xhr.response || xhr.responseText, err = null;
-            if (protocol !== "file:" && xhr.status !== 200)
-              err = "Non-200 status code returned: " + xhr.status;
-            if (!err && typeof res === "string") {
-              if (sets.dataType === "json") {
-                try {
-                  res = JSON.parse(res);
-                } catch (e) {
-                  err = e;
-                }
-              } else if (sets.dataType === "xml") {
-                try {
-                  res = utils.parseXML(res);
-                } catch (e) {
-                  err = e;
-                }
-              }
-            }
-            if (err) {
-              if (sets.error)
-                sets.error.call(xhr, err);
-            } else {
-              if (sets.load)
-                sets.load.call(xhr, res);
-            }
-          }
-        };
-        if (sets.dataType !== "json" && sets.dataType !== "xml")
-          xhr.responseType = sets.dataType;
-        else
-          xhr.responseType = "text";
-        xhr.open(sets.method, sets.url, true);
-        xhr.send();
-        return xhr;
-      },
-      createAjaxRequest: function () {
-        var activexmodes = [
-            "Msxml2.XMLHTTP",
-            "Microsoft.XMLHTTP"
-          ];
-        if (window.ActiveXObject) {
-          for (var i = 0; i < activexmodes.length; i++) {
-            try {
-              return new window.ActiveXObject(activexmodes[i]);
-            } catch (e) {
-            }
-          }
-        } else if (window.XMLHttpRequest) {
-          return new XMLHttpRequest();
-        } else {
-          return false;
-        }
-      },
-      setValues: function (obj, values) {
-        if (!values)
-          return;
-        for (var key in values) {
-          var newVal = values[key];
-          if (newVal === undefined) {
-            continue;
-          }
-          if (key in obj) {
-            var curVal = obj[key];
-            if (typeof curVal === "number" && typeof newVal === "string") {
-              var n;
-              if (newVal.indexOf("0x") === 0)
-                n = parseInt(newVal, 16);
-              else
-                n = parseInt(newVal, 10);
-              if (!isNaN(n))
-                obj[key] = n;
-            } else if (curVal instanceof Vector && newVal instanceof Array) {
-              curVal.set(parseFloat(newVal[0], 10) || 0, parseFloat(newVal[1], 10) || parseFloat(newVal[0], 10) || 0);
-            } else if (curVal instanceof Vector && typeof newVal === "string") {
-              var a = newVal.split(utils._arrayDelim, 2);
-              curVal.set(parseFloat(a[0], 10) || 0, parseFloat(a[1], 10) || parseFloat(a[0], 10) || 0);
-            } else if (curVal instanceof Vector && typeof newVal === "number") {
-              curVal.set(newVal, newVal);
-            } else if (curVal.x !== undefined && newVal instanceof Array) {
-              curVal.x = parseFloat(newVal[0], 10) || 0;
-              curVal.y = parseFloat(newVal[1], 10) || parseFloat(newVal[0], 10) || 0;
-            } else if (curVal.x !== undefined && typeof newVal === "string") {
-              var a2 = newVal.split(utils._arrayDelim, 2);
-              curVal.x = parseFloat(a2[0], 10) || 0;
-              curVal.y = parseFloat(a2[1], 10) || parseFloat(a2[0], 10) || 0;
-            } else if (curVal.x !== undefined && typeof newVal === "number") {
-              curVal.x = newVal;
-              curVal.y = newVal;
-            } else if (curVal instanceof Array && typeof newVal === "string") {
-              obj[key] = newVal.split(utils._arrayDelim);
-              for (var i = 0, il = obj[key].length; i < il; ++i) {
-                var val = obj[key][i];
-                if (!isNaN(val))
-                  obj[key][i] = parseFloat(val, 10);
-              }
-            } else {
-              obj[key] = newVal;
-            }
-          }
-        }
-        return obj;
-      },
-      extend: function () {
-        var src, copyIsArray, copy, name, options, clone, target = arguments[0] || {}, i = 1, length = arguments.length, deep = false;
-        if (typeof target === "boolean") {
-          deep = target;
-          target = arguments[1] || {};
-          i = 2;
-        }
-        if (typeof target !== "object" && typeof target !== "function") {
-          target = {};
-        }
-        for (; i < length; i++) {
-          if ((options = arguments[i]) != null) {
-            for (name in options) {
-              src = target[name];
-              copy = options[name];
-              if (target === copy) {
-                continue;
-              }
-              if (deep && copy && (utils.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
-                if (copyIsArray) {
-                  copyIsArray = false;
-                  clone = src && Array.isArray(src) ? src : [];
-                } else {
-                  clone = src && utils.isPlainObject(src) ? src : {};
-                }
-                target[name] = utils.extend(deep, clone, copy);
-              } else if (copy !== undefined) {
-                target[name] = copy;
-              }
-            }
-          }
-        }
-        return target;
-      },
-      isPlainObject: function (obj) {
-        if (typeof obj !== "object" || obj.nodeType || obj === obj.window) {
-          return false;
-        }
-        try {
-          if (obj.constructor && !Object.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
-            return false;
-          }
-        } catch (e) {
-          return false;
-        }
-        return true;
-      },
-      getOffset: function (element) {
-        var box = element.getBoundingClientRect(), clientTop = element.clientTop || document.body.clientTop || 0, clientLeft = element.clientLeft || document.body.clientLeft || 0, scrollTop = window.pageYOffset || element.scrollTop || document.body.scrollTop, scrollLeft = window.pageXOffset || element.scrollLeft || document.body.scrollLeft;
-        return new Vector(box.left + scrollLeft - clientLeft, box.top + scrollTop - clientTop);
-      },
-      parseHitArea: function (hv) {
-        var ha;
-        if (hv.length % 2 !== 0 && hv.length !== 3) {
-          throw "Strange number of values for hitArea! Should be a flat array of values, like: [x,y,r] for a circle, [x,y,w,h] for a rectangle, or [x,y,x,y,...] for other polygons.";
-        }
-        if (hv.length === 3) {
-          ha = new Circle(hv[0], hv[1], hv[2]);
-        } else if (hv.length === 4) {
-          ha = new Rectangle(hv[0], hv[1], hv[2], hv[3]);
-        } else {
-          ha = new Polygon(hv);
-        }
-        return ha;
-      },
-      parseTiledProperties: function (obj) {
-        if (!obj || obj.__tiledparsed)
-          return obj;
-        for (var k in obj) {
-          var v = obj[k];
-          if (!isNaN(v))
-            obj[k] = parseFloat(v, 10);
-          else if (v === "true")
-            obj[k] = true;
-          else if (v === "false")
-            obj[k] = false;
-          else {
-            try {
-              v = JSON.parse(v);
-              obj[k] = v;
-            } catch (e) {
-            }
-          }
-        }
-        if (obj.hitArea)
-          obj.hitArea = utils.parseHitArea(obj.hitArea);
-        if (obj.static || obj.sensor) {
-          obj.mass = Infinity;
-          obj.inertia = Infinity;
-        }
-        obj.__tiledparsed = true;
-        return obj;
-      },
-      log: window.console && window.console.log,
-      warn: window.console && window.console.warn,
-      error: window.console && window.console.error
-    };
-  if (typeof window.DOMParser !== "undefined") {
-    utils.parseXML = function (xmlStr) {
-      return new window.DOMParser().parseFromString(xmlStr, "text/xml");
-    };
-  } else if (typeof window.ActiveXObject !== "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {
-    utils.parseXML = function (xmlStr) {
-      var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-      xmlDoc.async = "false";
-      xmlDoc.loadXML(xmlStr);
-      return xmlDoc;
-    };
-  } else {
-    utils.warn("XML parser not available, trying to parse any XML will result in an error.");
-    utils.parseXML = function () {
-      throw "Trying to parse XML, but not XML parser is available in this environment";
-    };
-  }
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'utils/support',['require','exports','module'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  var support = module.exports = {
-      ua: window.navigator ? window.navigator.userAgent.toLowerCase() : "nodejs",
-      canvas: function () {
-        try {
-          return !!window.CanvasRenderingContext2D && !!document.createElement("canvas").getContext("2d");
-        } catch (e) {
-          return false;
-        }
-      }(),
-      webgl: function () {
-        try {
-          return !!window.WebGLRenderingContext && !!document.createElement("canvas").getContext("experimental-webgl");
-        } catch (e) {
-          return false;
-        }
-      }(),
-      workers: !!window.Worker,
-      blobUrls: !!window.Blob && !!window.URL && !!window.URL.createObjectURL,
-      typedArrays: !!window.ArrayBuffer,
-      fileapi: !!window.File && !!window.FileReader && !!window.FileList && !!window.Blob,
-      webAudio: !!window.AudioContext || !!window.webkitAudioContext || !!window.mozAudioContext,
-      htmlAudio: !!document.createElement("audio").canPlayType,
-      localStorage: !!window.localStorage,
-      touch: "createTouch" in document || "ontouchstart" in window || navigator.isCocoonJS,
-      gamepad: !!navigator.webkitGetGamepads || !!navigator.webkitGamepads || navigator.userAgent.indexOf("Firefox/") !== -1
-    };
-  var audioTest = new Audio();
-  support.codec = {
-    mp3: !!audioTest.canPlayType("audio/mpeg;").replace(/^no$/, ""),
-    opus: !!audioTest.canPlayType("audio/ogg; codecs=\"opus\"").replace(/^no$/, ""),
-    ogg: !!audioTest.canPlayType("audio/ogg; codecs=\"vorbis\"").replace(/^no$/, ""),
-    wav: !!audioTest.canPlayType("audio/wav; codecs=\"1\"").replace(/^no$/, ""),
-    m4a: !!(audioTest.canPlayType("audio/x-m4a;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
-    webm: !!audioTest.canPlayType("audio/webm; codecs=\"vorbis\"").replace(/^no$/, "")
-  };
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'audio/AudioPlayer',['require','exports','module','./AudioPlayer','../utils/EventEmitter','../utils/utils','../utils/inherit','../utils/support'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  var AudioPlayer = require("./AudioPlayer"), EventEmitter = require("../utils/EventEmitter"), utils = require("../utils/utils"), inherit = require("../utils/inherit"), support = require("../utils/support");
-  var AudioPlayer = module.exports = function (manager, audio, settings) {
-      EventEmitter.call(this);
-      this.src = "";
-      this.game = manager.game;
-      this.key = audio.key;
-      this.autoplay = false;
-      this.format = null;
-      this.loop = false;
-      this.pos3d = [
-        0,
-        0,
-        -0.5
-      ];
-      this.sprite = {};
-      Object.defineProperty(this, "volume", {
-        get: this.getVolume.bind(this),
-        set: this.setVolume.bind(this)
-      });
-      this._file = audio;
-      this._volume = 1;
-      this._duration = 0;
-      this._loaded = false;
-      this._manager = manager;
-      this._webAudio = support.webAudio;
-      this._nodes = [];
-      this._onendTimer = [];
-      utils.setValues(this, settings);
-      if (this._webAudio) {
-        this._setupAudioNode();
-      }
-      this.load();
-    };
-  inherit(AudioPlayer, Object, {
-    load: function () {
-      var self = this, audio = this._file;
-      if (audio.webAudio) {
-        if (!audio.decoded) {
-          this.ctx.decodeAudioData(audio.data, function (buffer) {
-            if (buffer) {
-              audio.data = buffer;
-              audio.decoded = true;
-              self.loadSoundBuffer(buffer);
-            }
-          });
-        } else {
-          this.loadSoundBuffer(audio.data);
-        }
-      } else {
-        var node = audio.data.cloneNode();
-        this._nodes.push(node);
-        node._pos = 0;
-        node.volume = this._manager.muted ? 0 : this._volume * this._manager.volume;
-        this._duration = node.duration;
-        this.sprite._default = [
-          0,
-          node.duration * 1000
-        ];
-        if (!this._loaded) {
-          this._loaded = true;
-          this.emit("load", {
-            message: "Audio file loaded.",
-            data: this.src
-          });
-        }
-        if (this.autoplay) {
-          this.play();
-        }
-      }
-      return this;
-    },
-    play: function (sprite, cb) {
-      var self = this;
-      if (typeof sprite === "function") {
-        cb = sprite;
-        sprite = null;
-      }
-      if (!sprite) {
-        sprite = "_default";
-      }
-      if (!this._loaded) {
-        this.on("load", function () {
-          self.play(sprite, cb);
-        });
-        return this;
-      }
-      if (!this.sprite[sprite]) {
-        if (typeof cb === "function")
-          cb();
-        return this;
-      }
-      this._inactiveNode(function (node) {
-        var pos = node._pos > 0 ? node._pos : self.sprite[sprite][0] / 1000, duration = self.sprite[sprite][1] / 1000 - node._pos, loop = self.loop || self.sprite[sprite][2], soundId = typeof cb === "string" ? cb : Math.round(Date.now() * Math.random()) + "", timerId;
-        node._sprite = sprite;
-        (function (o) {
-          timerId = setTimeout(function () {
-            if (!self._webAudio && o.loop) {
-              self.stop(o.id, o.timer).play(o.sprite, o.id);
-            }
-            if (self._webAudio && !o.loop) {
-              self._nodeById(o.id).paused = true;
-            }
-            if (!self._webAudio && !o.loop) {
-              self.stop(o.id, o.timer);
-            }
-            self.emit("end", {
-              message: "Audio has finished playing",
-              data: o.id
-            });
-          }, duration * 1000);
-          self._onendTimer.push(timerId);
-          o.timer = timerId;
-        }({
-          id: soundId,
-          sprite: sprite,
-          loop: loop
-        }));
-        if (self._webAudio) {
-          node.id = soundId;
-          node.paused = false;
-          self.refreshBuffer([
-            loop,
-            pos,
-            duration
-          ], soundId);
-          self._playStart = self._manager.ctx.currentTime;
-          node.gain.value = self._volume;
-          if (typeof node.bufferSource.start === "undefined") {
-            node.bufferSource.noteGrainOn(0, pos, duration);
-          } else {
-            node.bufferSource.start(0, pos, duration);
-          }
-        } else {
-          if (node.readyState === 4) {
-            node.id = soundId;
-            node.currentTime = pos;
-            node.muted = self._manager.muted;
-            node.volume = self._volume * self._manager.volume;
-            node.play();
-          } else {
-            self._clearEndTimer(timerId);
-            (function () {
-              var sound = self, playSpr = sprite, fn = cb, newNode = node;
-              var evt = function () {
-                sound.play(playSpr, fn);
-                newNode.removeEventListener("canplaythrough", evt, false);
-              };
-              newNode.addEventListener("canplaythrough", evt, false);
-            }());
-            return self;
-          }
-        }
-        self.emit("play", {
-          message: "Playing audio file",
-          data: soundId
-        });
-        if (typeof cb === "function")
-          cb(soundId);
-      });
-      return this;
-    },
-    pause: function (id, timerId) {
-      var self = this;
-      if (!this._loaded) {
-        this.on("play", function () {
-          self.play(id);
-        });
-        return this;
-      }
-      this._clearEndTimer(timerId || 0);
-      var activeNode = id ? this._nodeById(id) : this._activeNode();
-      if (activeNode) {
-        if (this._webAudio) {
-          if (!activeNode.bufferSource)
-            return this;
-          activeNode.paused = true;
-          activeNode._pos += this._manager.ctx.currentTime - this._playStart;
-          if (typeof activeNode.bufferSource.stop === "undefined") {
-            activeNode.bufferSource.noteOff(0);
-          } else {
-            activeNode.bufferSource.stop(0);
-          }
-        } else {
-          activeNode._pos = activeNode.currentTime;
-          activeNode.pause();
-        }
-      }
-      this.emit("pause", {
-        message: "Audio file paused",
-        data: id
-      });
-      return this;
-    },
-    stop: function (id, timerId) {
-      var self = this;
-      if (!this._loaded) {
-        this.on("play", function () {
-          self.stop(id);
-        });
-        return this;
-      }
-      this._clearEndTimer(timerId || 0);
-      var activeNode = id ? this._nodeById(id) : this._activeNode();
-      if (activeNode) {
-        activeNode._pos = 0;
-        if (this._webAudio) {
-          if (!activeNode.bufferSource)
-            return this;
-          activeNode.paused = true;
-          if (typeof activeNode.bufferSource.stop === "undefined") {
-            activeNode.bufferSource.noteOff(0);
-          } else {
-            activeNode.bufferSource.stop(0);
-          }
-        } else {
-          activeNode.pause();
-          activeNode.currentTime = 0;
-        }
-      }
-      return this;
-    },
-    mute: function (id) {
-      return this.setMuted(true, id);
-    },
-    unmute: function (id) {
-      return this.setMuted(false, id);
-    },
-    setMuted: function (muted, id) {
-      var self = this;
-      if (!this._loaded) {
-        this.on("play", function () {
-          self.setMuted(muted, id);
-        });
-        return this;
-      }
-      var activeNode = id ? this._nodeById(id) : this._activeNode();
-      if (activeNode) {
-        if (this._webAudio) {
-          activeNode.gain.value = muted ? 0 : this._volume;
-        } else {
-          activeNode.volume = muted ? 0 : this._volume;
-        }
-      }
-      return this;
-    },
-    seek: function (pos, id) {
-      var self = this;
-      if (!this._loaded) {
-        this.on("load", function () {
-          self.seek(pos);
-        });
-        return this;
-      }
-      if (!pos || pos < 0)
-        pos = 0;
-      var activeNode = id ? this._nodeById(id) : this._activeNode();
-      if (activeNode) {
-        if (this._webAudio) {
-          activeNode._pos = pos;
-          this.pause(activeNode.id).play(activeNode._sprite, id);
-        } else {
-          activeNode.currentTime = pos;
-        }
-      }
-      return this;
-    },
-    getPosition: function (id) {
-      var self = this;
-      if (!this._loaded) {
-        this.on("load", function () {
-          self.getPosition(id);
-        });
-        return this;
-      }
-      var activeNode = id ? this._nodeById(id) : this._activeNode();
-      if (activeNode) {
-        if (this._webAudio) {
-          return activeNode._pos + (this._manager.ctx.currentTime - this._playStart);
-        } else {
-          return activeNode.currentTime;
-        }
-      }
-      return 0;
-    },
-    fade: function (from, to, len, id, cb) {
-      var self = this, diff = Math.abs(from - to), dir = from > to ? "dowm" : "up", steps = diff / 0.01, stepTime = len / steps;
-      if (typeof id === "function") {
-        cb = id;
-        id = null;
-      }
-      if (!this._loaded) {
-        this.on("load", function () {
-          self.fade(from, to, len, id, cb);
-        });
-        return this;
-      }
-      this.setVolume(from, id);
-      for (var i = 1; i <= steps; ++i) {
-        var change = this._volume + (dir === "up" ? 0.01 : -0.01) * i, vol = Math.round(1000 * change) / 1000, wait = stepTime * i;
-        this._doFadeStep(vol, wait, to, id, cb);
-      }
-    },
-    getVolume: function () {
-      return this._volume;
-    },
-    setVolume: function (vol, id) {
-      var self = this;
-      vol = parseFloat(vol);
-      if (!this._loaded) {
-        this.on("play", function () {
-          self.setVolume(vol, id);
-        });
-        return this;
-      }
-      if (vol >= 0 && vol <= 1) {
-        this._volume = vol;
-        var activeNode = id ? this._nodeById(id) : this._activeNode();
-        if (activeNode) {
-          if (this._webAudio) {
-            activeNode.gain.volume = vol;
-          } else {
-            activeNode.volume = vol * this._manager.volume;
-          }
-        }
-      }
-      return this;
-    },
-    setPosition: function (x, y, z, id) {
-      var self = this;
-      x = !x ? 0 : x;
-      y = !y ? 0 : y;
-      z = !z && z !== 0 ? -0.5 : z;
-      if (!this._loaded) {
-        this.on("play", function () {
-          self.setPosition(x, y, z, id);
-        });
-        return this;
-      }
-      if (this._webAudio) {
-        var activeNode = id ? this._nodeById(id) : this._activeNode();
-        if (activeNode) {
-          this.pos3d[0] = x;
-          this.pos3d[1] = y;
-          this.pos3d[2] = z;
-          activeNode.panner.setPosition(x, y, z);
-        }
-      }
-      return this;
-    },
-    _doFadeStep: function (vol, wait, end, id, cb) {
-      var self = this;
-      setTimeout(function () {
-        self.setVolume(vol, id);
-        if (vol === end) {
-          if (typeof cb === "function")
-            cb();
-        }
-      }, wait);
-    },
-    _nodeById: function (id) {
-      var node = this._nodes[0];
-      for (var i = 0, il = this._nodes.length; i < il; ++i) {
-        if (this._nodes[i].id === id) {
-          node = this._nodes[i];
-          break;
-        }
-      }
-      return node;
-    },
-    _activeNode: function () {
-      var node;
-      for (var i = 0, il = this._nodes.length; i < il; ++i) {
-        if (!this._nodes[i].paused) {
-          node = this._nodes[i];
-          break;
-        }
-      }
-      this._drainPool();
-      return node;
-    },
-    _inactiveNode: function (cb) {
-      var node;
-      for (var i = 0, il = this._nodes.length; i < il; ++i) {
-        if (this._nodes[i].paused && this._nodes[i].readyState === 4) {
-          cb(node = this._nodes[i]);
-          break;
-        }
-      }
-      this._drainPool();
-      if (node)
-        return;
-      if (this._webAudio) {
-        node = this._setupAudioNode();
-        cb(node);
-      } else {
-        this.load();
-        node = this._nodes[this.nodes.length - 1];
-        node.addEventListener("loadedmetadata", function () {
-          cb(node);
-        });
-      }
-    },
-    _drainPool: function () {
-      var inactive = 0, i = 0, il = 0;
-      for (i = 0, il = this._nodes.length; i < il; ++i) {
-        if (this._nodes[i].paused) {
-          inactive++;
-        }
-      }
-      for (i = this._nodes.length; i >= 0; --i) {
-        if (inactive <= 5)
-          break;
-        if (this._nodes[i].paused) {
-          inactive--;
-          this._nodes.splice(i, 1);
-        }
-      }
-    },
-    _clearEndTimer: function (timerId) {
-      var timer = this._onendTimer.indexOf(timerId);
-      timer = timer >= 0 ? timer : 0;
-      if (this._onendTimer[timer]) {
-        clearTimeout(this._onendTimer[timer]);
-        this._onendTimer.splice(timer, 1);
-      }
-    },
-    _setupAudioNode: function () {
-      var node = this._nodes, i = this._nodes.length;
-      node.push(typeof this._manager.ctx.createGain === "undefined" ? this._manager.ctx.createGainNode : this._manager.ctx.createGain());
-      node[i].gain.value = this._volume;
-      node[i].paused = true;
-      node[i]._pos = 0;
-      node[i].readyState = 4;
-      node[i].connect(this._manager.masterGain);
-      node[i].panner = this._manager.ctx.createPanner();
-      node[i].panner.setPosition(this.pos3d[0], this.pos3d[1], this.pos3d[2]);
-      node[i].panner.connect(node[i]);
-      return node[i];
-    },
-    loadSoundBuffer: function (buffer) {
-      this._duration = buffer ? buffer.duration : this._duration;
-      this.sprite._default = [
-        0,
-        this._duration * 1000
-      ];
-      if (!this._loaded) {
-        this._loaded = true;
-        this.emit("load", {
-          message: "Audio file loaded.",
-          data: this.src
-        });
-      }
-      if (this.autoplay) {
-        this.play();
-      }
-    },
-    refreshBuffer: function (loop, id) {
-      var node = this._nodeById(id);
-      node.bufferSource = this._manager.ctx.createBufferSource();
-      node.bufferSource.buffer = this._file.data;
-      node.bufferSource.connect(node.panner);
-      node.bufferSource.loop = loop[0];
-      if (loop[0]) {
-        node.bufferSource.loopStart = loop[1];
-        node.bufferSource.loopEnd = loop[1] + loop[2];
-      }
-    }
-  });
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
-  'audio/AudioManager',['require','exports','module','./AudioPlayer','../utils/inherit','../utils/support'],function (require, exports, module) {
-  
-// uRequire v0.6.1: START body of original nodejs module
-  var AudioPlayer = require("./AudioPlayer"), inherit = require("../utils/inherit"), support = require("../utils/support");
-  var __AudioCtx = window.AudioContext || window.webkitAudioContext || window.mozAudioContext, __audioctx = support.webAudio ? new __AudioCtx() : null;
-  var AudioManager = module.exports = function (game, parent) {
-      this.game = game;
-      this.parent = parent;
-      this._muted = false;
-      this._volume = 1;
-      Object.defineProperty(this, "volume", {
-        get: this.getVolume.bind(this),
-        set: this.setVolume.bind(this)
-      });
-      this.ctx = __audioctx;
-      this.canPlay = support.webAudio || support.htmlAudio;
-      if (support.webAudio) {
-        this.masterGain = this.ctx.createGain ? this.ctx.createGain() : this.ctx.createGainNode();
-        this.masterGain.gain.value = 1;
-        this.setParent(parent);
-      }
-      this.sounds = {};
-    };
-  inherit(AudioManager, Object, {
-    getVolume: function () {
-      return this._volume;
-    },
-    setVolume: function (v) {
-      v = parseFloat(v, 10);
-      if (!isNaN(v) && v >= 0 && v <= 1) {
-        this._volume = v;
-        if (support.webAudio)
-          this.masterGain.gain.value = v;
-        for (var key in this.sounds) {
-          if (this.sounds.hasOwnProperty(key) && this.sounds[key]._webAudio === false) {
-            var player = this.sounds[key];
-            for (var i = 0, il = player._nodes.length; i < il; ++i) {
-              player._nodes[i].volume = player._volume * this._volume;
-            }
-          }
-        }
-      }
-    },
-    mute: function () {
-      return this.setMuted(true);
-    },
-    unmute: function () {
-      return this.setMuted(false);
-    },
-    setMuted: function (m) {
-      this._muted = m = !!m;
-      if (support.webAudio)
-        this.masterGain.gain.value = m ? 0 : this._volume;
-      for (var key in this.sounds) {
-        if (this.sounds.hasOwnProperty(key) && this.sounds[key]._webAudio === false) {
-          var player = this.sounds[key];
-          for (var i = 0, il = player._nodes.length; i < il; ++i) {
-            player._nodes[i].mute();
-          }
-        }
-      }
-      return this;
-    },
-    setParent: function (parent) {
-      this.parent = parent;
-      if (support.webAudio) {
-        if (parent && parent.masterGain) {
-          this.masterGain.connect(parent.masterGain);
-        } else {
-          this.masterGain.connect(this.ctx.destination);
-        }
-      }
-    },
-    attach: function (sound) {
-      this.sounds[sound.key] = sound;
-      sound._manager = this;
-      if (support.webAudio) {
-        for (var i = 0; i < sound._nodes.length; ++i) {
-          sound._nodes[i].disconnect();
-          sound._nodes[i].connect(this.masterGain);
-        }
-      }
-    },
-    add: function (key, settings) {
-      if (!this.canPlay) {
-        return false;
-      }
-      var audio = this.game.cache.getAudio(key);
-      if (!audio.player)
-        audio.player = new AudioPlayer(this, audio, settings);
-      return this.sounds[key] = audio.player;
-    },
-    remove: function (key) {
-      var audio = this.sounds[key];
-      if (audio) {
-        audio.stop();
-      }
-      delete this.sounds[key];
-    }
-  });
-// uRequire v0.6.1: END body of original nodejs module
-
-
-return module.exports;
-}
-);
-define(
   'display/Container',['require','exports','module','../utils/EventEmitter','../utils/utils','../utils/inherit','../vendor/pixi'],function (require, exports, module) {
   
 // uRequire v0.6.1: START body of original nodejs module
@@ -7363,6 +7531,8 @@ define(
       random: Math.random,
       abs: Math.abs,
       sqrt: Math.sqrt,
+      min: Math.min,
+      max: Math.max,
       round: function (n) {
         return ~~(n + (n > 0 ? 0.5 : -0.5));
       },
@@ -7453,9 +7623,13 @@ define(
   
 // uRequire v0.6.1: START body of original nodejs module
   var Rectangle = require("../math/Rectangle"), Vector = require("../math/Vector"), math = require("../math/math"), inherit = require("../utils/inherit"), C = require("../constants");
-  var Body = module.exports = function (sprite) {
+  var Body = module.exports = function (sprite, shape) {
       Rectangle.call(this, sprite.position.x, sprite.position.y, sprite.width, sprite.height);
       this.sprite = sprite;
+      this.shape = shape || new Rectangle(0, 0, sprite.width, sprite.height);
+      if (this.shape._shapetype === C.SHAPE.RECTANGLE) {
+        this.shape = this.shape.toPolygon();
+      }
       this.type = C.PHYSICS_TYPE.DYNAMIC;
       this.solveType = C.SOLVE_TYPE.DISPLACE;
       this.velocity = new Vector();
@@ -7465,19 +7639,13 @@ define(
       this.bounce = new Vector();
       this.offset = new Vector();
       this.maxVelocity = new Vector(10000, 10000);
-      this.angularVelocity = 0;
-      this.angularAccel = 0;
-      this.angularDrag = 0;
-      this.maxAngular = 1000;
       this.mass = sprite.mass || 1;
-      this.rotation = 0;
       this.allowRotation = true;
       this.embedded = false;
       this.carry = false;
       this.allowCollide = C.DIRECTION.ALL;
       this.touching = C.DIRECTION.NONE;
       this.wasTouching = C.DIRECTION.NONE;
-      this.overlap = new Vector();
       this.lastPos = new Vector();
       this._accel = 0;
       this._drag = 0;
@@ -7487,7 +7655,7 @@ define(
     };
   inherit(Body, Rectangle, {
     clone: function () {
-      var body = new Body(this.sprite);
+      var body = new Body(this.sprite, this.shape);
       body.type = this.type;
       body.solveType = this.solveType;
       body.velocity.copy(this.velocity);
@@ -7497,13 +7665,7 @@ define(
       body.bounce.copy(this.bounce);
       body.offset.copy(this.offset);
       body.maxVelocity.copy(this.maxVelocity);
-      body.angularVelocity = this.angularVelocity;
-      body.angularAccel = this.angularAccel;
-      body.angularDrag = this.angularDrag;
-      body.maxAngular = this.maxAngular;
       body.mass = this.mass;
-      body.rotation = this.rotation;
-      body.allowRotation = this.allowRotation;
       body.embedded = this.embedded;
       body.carry = this.carry;
       body.allowCollide = this.allowCollide;
@@ -7535,9 +7697,6 @@ define(
         this.velocity.x += gravity.x + this.gravity.x;
         this.velocity.y += gravity.y + this.gravity.y;
       }
-      this._vDelta = (this.computeVelocity(dt, this.angularVelocity, this.angularAccel, this.angularDrag, this.maxAngular) - this.angularVelocity) / 2;
-      this.angularVelocity += this._vDelta;
-      this.rotation += this.angularVelocity * dt;
       this._vDelta = (this.computeVelocity(dt, this.velocity.x, this.accel.x, this.drag.x, this.maxVelocity.x) - this.velocity.x) / 2;
       this.velocity.x += this._vDelta;
       this.x += this.velocity.x * dt;
@@ -7552,17 +7711,17 @@ define(
       this.x = this.sprite.position.x - this.sprite.anchor.x * this._width + this.offset.x;
       this.y = this.sprite.position.y - this.sprite.anchor.y * this._height + this.offset.y;
       this.lastPos.set(this.x, this.y);
-      this.rotation = this.sprite.rotation;
       if (this.type !== C.PHYSICS_TYPE.STATIC)
         this.updateMotion(dt, gravity);
       this.syncSprite();
+      this.syncShape();
     },
     syncSprite: function () {
-      this.sprite.position.x = this.x - this.offset.x + this.sprite.anchor.x * this._width;
-      this.sprite.position.y = this.y - this.offset.y + this.sprite.anchor.y * this._height;
-      if (this.allowRotation) {
-        this.sprite.rotation = this.rotation;
-      }
+      this.sprite.position.x = math.round(this.x - this.offset.x + this.sprite.anchor.x * this._width);
+      this.sprite.position.y = math.round(this.y - this.offset.y + this.sprite.anchor.y * this._height);
+    },
+    syncShape: function () {
+      this.shape.position.copy(this.position);
     },
     deltaX: function () {
       return this.x - this.lastPos.x;
@@ -7694,7 +7853,7 @@ define(
       this.playing = false;
       this.hitArea = this.hitArea || new Rectangle(0, 0, this.width, this.height);
       this.body = new Body(this);
-      this.goto(0, this.currentAnimation).play();
+      this.goto(0, this.currentAnimation);
     };
   inherit(Sprite, PIXI.Sprite, {
     clone: function () {
@@ -7735,10 +7894,6 @@ define(
       return this;
     },
     goto: function (frame, anim) {
-      if (typeof frame === "string") {
-        anim = frame;
-        frame = 0;
-      }
       this.currentFrame = frame || 0;
       this.lastRound = math.round(frame || 0);
       if (anim) {
@@ -7789,12 +7944,14 @@ define(
         }
       } else {
         if (loop) {
-          this.goto(0);
+          this.goto(0).play();
         } else {
           this.stop();
           this.emit("complete", this.currentAnimation);
         }
       }
+    },
+    onCollide: function () {
     }
   });
 // uRequire v0.6.1: END body of original nodejs module
@@ -9595,10 +9752,58 @@ return module.exports;
 }
 );
 define(
-  'physics/Physics',['require','exports','module','../math/QuadTree','../display/Container','../display/Sprite','../math/Vector','../utils/inherit','../math/math','../constants'],function (require, exports, module) {
+  'physics/Collision',['require','exports','module','../utils/inherit','../math/Vector'],function (require, exports, module) {
   
 // uRequire v0.6.1: START body of original nodejs module
-  var QuadTree = require("../math/QuadTree"), Container = require("../display/Container"), Sprite = require("../display/Sprite"), Vector = require("../math/Vector"), inherit = require("../utils/inherit"), math = require("../math/math"), C = require("../constants");
+  var inherit = require("../utils/inherit"), Vector = require("../math/Vector");
+  var Collision = module.exports = function () {
+      this.a = null;
+      this.b = null;
+      this.aInB = false;
+      this.bInA = false;
+      this.overlap = Infinity;
+      this.overlapN = new Vector();
+      this.overlapV = new Vector();
+    };
+  inherit(Collision, Object, {
+    clear: function () {
+      this.a = null;
+      this.b = null;
+      this.aInB = false;
+      this.bInA = false;
+      this.overlap = Infinity;
+      this.overlapN.set(0, 0);
+      this.overlapV.set(0, 0);
+    },
+    clone: function () {
+      var c = new Collision();
+      c.a = this.a;
+      c.b = this.b;
+      c.aInB = this.aInB;
+      c.bInA = this.bInA;
+      c.overlap = this.overlap;
+      c.overlapN = this.overlapN;
+      c.overlapV = this.overlapV;
+      return c;
+    }
+  });
+// uRequire v0.6.1: END body of original nodejs module
+
+
+return module.exports;
+}
+);
+define(
+  'physics/Physics',['require','exports','module','../math/QuadTree','./Collision','../math/Vector','../utils/inherit','../math/math','../constants'],function (require, exports, module) {
+  
+// uRequire v0.6.1: START body of original nodejs module
+  var QuadTree = require("../math/QuadTree"), Collision = require("./Collision"), Vector = require("../math/Vector"), inherit = require("../utils/inherit"), math = require("../math/math"), C = require("../constants");
+  var T_VECTORS = [];
+  for (var i = 0; i < 10; i++)
+    T_VECTORS.push(new Vector());
+  var T_ARRAYS = [];
+  for (var i = 0; i < 5; i++)
+    T_ARRAYS.push([]);
   var Physics = module.exports = function (state) {
       this.state = state;
       this.maxObjects = C.PHYSICS.MAX_QUAD_OBJECTS;
@@ -9606,218 +9811,355 @@ define(
       this.tree = new QuadTree(state.world.bounds.clone(), this.maxObjects, this.maxLevels);
       this.bodies = [];
       this.gravity = new Vector(0, 9.87);
-      this._total = 0;
-      this._overlap = 0;
-      this._maxOverlap = 0;
-      this._velocity1 = 0;
-      this._velocity2 = 0;
-      this._newVelocity1 = 0;
-      this._newVelocity2 = 0;
-      this._average = 0;
-      this._potentials = null;
+      this._collision = new Collision();
     };
   inherit(Physics, Object, {
     update: function (dt) {
       this.tree.clear();
-      var bods = this.bodies;
-      for (var i = 0, il = bods.length, body; i < il; ++i) {
+      var bods = this.bodies, body, i, pots, p, il = bods.length, pl, pot;
+      for (i = 0; i < il; ++i) {
         body = bods[i];
         body.update(dt, this.gravity);
+        body._collided = false;
         if (body.allowCollide && body.sprite.visible) {
           this.tree.insert(body);
         }
       }
-    },
-    addSprite: function (sprite) {
-      this.bodies.push(sprite.body);
-      sprite._physics = this;
-    },
-    removeSprite: function (sprite) {
-      var i = this.bodies.indexOf(sprite.body);
-      if (i !== -1)
-        this.bodies.splice(i, 1);
-    },
-    collide: function (obj1, obj2, onCollision) {
-      this._total = 0;
-      if (obj1 && obj2) {
-        if (obj1 instanceof Sprite) {
-          if (obj2 instanceof Sprite) {
-            this._collideSpriteVsSprite(obj1, obj2, onCollision);
-          } else if (obj2 instanceof Container) {
-            this._collideSpriteVsContainer(obj1, obj2, onCollision);
-          }
-        } else if (obj1 instanceof Container) {
-          if (obj2 instanceof Sprite) {
-            this._collideSpriteVsContainer(obj2, obj1, onCollision);
-          } else if (obj2 instanceof Container) {
-            this._collideContainerVsContainer(obj1, obj2, onCollision);
+      for (i = 0; i < il; ++i) {
+        body = bods[i];
+        pots = this.tree.retrieve(body);
+        for (p = 0, pl = pots.length; p < pl; ++p) {
+          pot = pots[p];
+          if (pot === body)
+            continue;
+          if (body.type === C.PHYSICS_TYPE.STATIC && pot.type === C.PHYSICS_TYPE.STATIC)
+            continue;
+          if (body._collided && pot._collided)
+            continue;
+          this._collision.clear();
+          if (this.checkShapeCollision(body, pot)) {
+            if (body.sprite.onCollide(pot.sprite, this._collision.clone()) !== false && pot.sprite.onCollide(body.sprite, this._collision.clone()) !== false) {
+              body._collided = true;
+              pot._collided = true;
+              this.solveCollision(body, pot);
+              break;
+            }
           }
         }
       }
-      return this._total;
     },
-    separate: function (b1, b2) {
-      if (this._separateX(b1, b2) || this._separateY(b1, b2)) {
-        b1.syncSprite();
-        b2.syncSprite();
-        return true;
+    solveCollision: function (b1, b2) {
+      var col = this._collision, ov = col.overlapV;
+      if (ov.x)
+        this._separate(b1, b2, ov.x, "x");
+      if (ov.y)
+        this._separate(b1, b2, ov.y, "y");
+      if (b2.carry && b1.touching & C.DIRECTION.BOTTOM) {
+        b1.x += b2.deltaX();
+      } else if (b1.carry && b2.touching & C.DIRECTION.BOTTOM) {
+        b2.x += b1.deltaX();
       }
-      return false;
+      b1.syncSprite();
+      b1.syncShape();
+      b2.syncSprite();
+      b2.syncShape();
     },
-    _hit: function (obj1, obj2, cb) {
-      this._total++;
-      if (cb)
-        cb(obj1, obj2);
+    _separate: function (b1, b2, over, ax) {
+      var v1 = b1.velocity[ax], v2 = b2.velocity[ax];
+      if (b1.type !== C.PHYSICS_TYPE.STATIC && b2.type !== C.PHYSICS_TYPE.STATIC) {
+        over *= 0.5;
+        b1[ax] -= over;
+        b2[ax] += over;
+        var nv1 = math.sqrt(v2 * v2 * b2.mass / b1.mass) * (v2 > 0 ? 1 : -1), nv2 = math.sqrt(v1 * v1 * b1.mass / b2.mass) * (v1 > 0 ? 1 : -1), avg = (v1 + v2) * 0.5;
+        nv1 -= avg;
+        nv2 -= avg;
+        b1.velocity[ax] = avg + nv1 * b1.bounce[ax];
+        b2.velocity[ax] = avg + nv2 * b2.bounce[ax];
+      } else if (b1.type !== C.PHYSICS_TYPE.STATIC) {
+        b1[ax] -= over;
+        b1.velocity[ax] = v2 - v1 * b1.bounce[ax];
+      } else if (b2.type !== C.PHYSICS_TYPE.STATIC) {
+        b2[ax] += over;
+        b2.velocity[ax] = v1 - v2 * b2.bounce[ax];
+      }
     },
-    _separateX: function (b1, b2) {
-      if (b1.type === C.PHYSICS_TYPE.STATIC && b2.type === C.PHYSICS_TYPE.STATIC)
-        return false;
-      this._overlap = 0;
-      var dx1 = b1.deltaX(), dx2 = b2.deltaX();
-      if (b1.overlaps(b2)) {
-        this._maxOverlap = math.abs(dx1) + math.abs(dx2) + C.PHYSICS.OVERLAP_BIAS;
-        if (dx1 === 0 && dx2 === 0) {
-          b1.embedded = true;
-          b2.embedded = true;
-        } else if (dx1 > dx2) {
-          this._overlap = b1.right - b2.x;
-          if (this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.RIGHT) || !(b2.allowCollide & C.DIRECTION.LEFT)) {
-            this._overlap = 0;
+    checkShapeCollision: function (b1, b2) {
+      var hit = false;
+      if (b1.shape._shapetype === C.SHAPE.CIRCLE) {
+        if (b2.shape._shapetype === C.SHAPE.CIRCLE) {
+          hit = this.testCircleCircle(b1.shape, b2.shape, this._collision);
+        } else {
+          hit = this.testCirclePolygon(b1.shape, b2.shape, this._collision);
+        }
+      } else {
+        if (b2.shape._shapetype === C.SHAPE.CIRCLE) {
+          hit = this.testPolygonCircle(b1.shape, b2.shape, this._collision);
+        } else {
+          hit = this.testPolygonPolygon(b1.shape, b2.shape, this._collision);
+        }
+      }
+      if (hit) {
+        var on = this._collision.overlapN, ov = this._collision.overlapV;
+        if (on.x > 0) {
+          if (!(b1.allowCollide & C.DIRECTION.RIGHT) || !(b2.allowCollide & C.DIRECTION.LEFT)) {
+            on.x = 0;
+            ov.x = 0;
           } else {
             b1.touching |= C.DIRECTION.RIGHT;
             b2.touching |= C.DIRECTION.LEFT;
           }
-        } else if (dx1 < dx2) {
-          this._overlap = b1.x - b2.width - b2.x;
-          if (-this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.LEFT) || !(b2.allowCollide & C.DIRECTION.RIGHT)) {
-            this._overlap = 0;
+        } else if (on.x < 0) {
+          if (!(b1.allowCollide & C.DIRECTION.LEFT) || !(b2.allowCollide & C.DIRECTION.RIGHT)) {
+            on.x = 0;
+            ov.x = 0;
           } else {
             b1.touching |= C.DIRECTION.LEFT;
             b2.touching |= C.DIRECTION.RIGHT;
           }
         }
-      }
-      if (this._overlap) {
-        b1.overlap.x = b2.overlap.x = this._overlap;
-        this._velocity1 = b1.velocity.x;
-        this._velocity2 = b2.velocity.x;
-        if (b1.type !== C.PHYSICS_TYPE.STATIC && b2.type !== C.PHYSICS_TYPE.STATIC) {
-          this._overlap *= 0.5;
-          b1.x = b1.x - this._overlap;
-          b2.x += this._overlap;
-          this._newVelocity1 = math.sqrt(this._velocity2 * this._velocity2 * b2.mass / b1.mass) * (this._velocity2 > 0 ? 1 : -1);
-          this._newVelocity2 = math.sqrt(this._velocity1 * this._velocity1 * b1.mass / b2.mass) * (this._velocity1 > 0 ? 1 : -1);
-          this._average = (this._newVelocity1 + this._newVelocity2) * 0.5;
-          this._newVelocity1 -= this._average;
-          this._newVelocity2 -= this._average;
-          b1.velocity.x = this._average + this._newVelocity1 * b1.bounce.x;
-          b2.velocity.x = this._average + this._newVelocity2 * b1.bounce.x;
-        } else if (b1.type !== C.PHYSICS_TYPE.STATIC) {
-          b1.x -= this._overlap;
-          b1.velocity.x = this._velocity2 - this._velocity1 * b1.bounce.x;
-        } else if (b2.type !== C.PHYSICS_TYPE.STATIC) {
-          b2.x += this._overlap;
-          b2.velocity.x = this._velocity1 - this._velocity2 * b2.bounce.x;
-        }
-        return true;
-      }
-      return false;
-    },
-    _separateY: function (b1, b2) {
-      if (b1.type === C.PHYSICS_TYPE.STATIC && b2.type === C.PHYSICS_TYPE.STATIC)
-        return false;
-      this._overlap = 0;
-      var dy1 = b1.deltaY(), dy2 = b2.deltaY();
-      if (b1.overlaps(b2)) {
-        this._maxOverlap = math.abs(dy1) + math.abs(dy2) + C.PHYSICS.OVERLAP_BIAS;
-        if (dy1 === 0 && dy2 === 0) {
-          b1.embedded = true;
-          b2.embedded = true;
-        } else if (dy1 > dy2) {
-          this._overlap = b1.bottom - b2.y;
-          if (this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.BOTTOM) || !(b2.allowCollide & C.DIRECTION.TOP)) {
-            this._overlap = 0;
+        if (on.y > 0) {
+          if (!(b1.allowCollide & C.DIRECTION.BOTTOM) || !(b2.allowCollide & C.DIRECTION.TOP)) {
+            on.y = 0;
+            ov.y = 0;
           } else {
             b1.touching |= C.DIRECTION.BOTTOM;
             b2.touching |= C.DIRECTION.TOP;
           }
-        } else if (dy1 < dy2) {
-          this._overlap = b1.y - b2.height - b2.y;
-          if (-this._overlap > this._maxOverlap || !(b1.allowCollide & C.DIRECTION.TOP) || !(b2.allowCollide & C.DIRECTION.BOTTOM)) {
-            this._overlap = 0;
+        } else if (on.y < 0) {
+          if (!(b1.allowCollide & C.DIRECTION.TOP) || !(b2.allowCollide & C.DIRECTION.BOTTOM)) {
+            on.y = 0;
+            ov.y = 0;
           } else {
             b1.touching |= C.DIRECTION.TOP;
             b2.touching |= C.DIRECTION.BOTTOM;
           }
         }
+        if (!on.x && !on.y)
+          hit = false;
       }
-      if (this._overlap) {
-        b1.overlap.y = b2.overlap.y = this._overlap;
-        this._velocity1 = b1.velocity.y;
-        this._velocity2 = b2.velocity.y;
-        if (b1.type !== C.PHYSICS_TYPE.STATIC && b2.type !== C.PHYSICS_TYPE.STATIC) {
-          this._overlap *= 0.5;
-          b1.y = b1.y - this._overlap;
-          b2.y += this._overlap;
-          this._newVelocity1 = math.sqrt(this._velocity2 * this._velocity2 * b2.mass / b1.mass) * (this._velocity2 > 0 ? 1 : -1);
-          this._newVelocity2 = math.sqrt(this._velocity1 * this._velocity1 * b1.mass / b2.mass) * (this._velocity1 > 0 ? 1 : -1);
-          this._average = (this._newVelocity1 + this._newVelocity2) * 0.5;
-          this._newVelocity1 -= this._average;
-          this._newVelocity2 -= this._average;
-          b1.velocity.y = this._average + this._newVelocity1 * b1.bounce.y;
-          b2.velocity.y = this._average + this._newVelocity2 * b1.bounce.y;
-        } else if (b1.type !== C.PHYSICS_TYPE.STATIC) {
-          b1.y -= this._overlap;
-          b1.velocity.y = this._velocity2 - this._velocity1 * b1.bounce.y;
-          if (b2.carry && dy1 > dy2) {
-            b1.x += b2.deltaX();
+      return hit;
+    },
+    addSprite: function (sprite) {
+      this.addBody(sprite.body);
+      sprite._physics = this;
+    },
+    removeSprite: function (sprite) {
+      this.removeBody(sprite.body);
+      sprite._physics = null;
+    },
+    addBody: function (body) {
+      this.bodies.push(body);
+    },
+    removeBody: function (body) {
+      var i = this.bodies.indexOf(body);
+      if (i !== -1)
+        this.bodies.splice(i, 1);
+    },
+    testCircleCircle: function (a, b, response) {
+      var differenceV = T_VECTORS.pop().copy(b.position).sub(a.position), totalRadius = a.r + b.r, totalRadiusSq = totalRadius * totalRadius, distanceSq = differenceV.len2();
+      if (distanceSq > totalRadiusSq) {
+        T_VECTORS.push(differenceV);
+        return false;
+      }
+      if (response) {
+        var dist = math.sqrt(distanceSq);
+        response.a = a;
+        response.b = b;
+        response.overlap = totalRadius - dist;
+        response.overlapN.copy(differenceV.normalize());
+        response.overlapV.copy(differenceV).multiplyScalar(response.overlap);
+        response.aInB = a.r <= b.r && dist <= b.r - a.r;
+        response.bInA = b.r <= a.r && dist <= a.r - b.r;
+      }
+      T_VECTORS.push(differenceV);
+      return true;
+    },
+    testPolygonCircle: function (polygon, circle, response) {
+      var circlePos = T_VECTORS.pop().copy(circle.position).sub(polygon.position), radius = circle.radius, radius2 = radius * radius, points = polygon.points, len = points.length, edge = T_VECTORS.pop(), point = T_VECTORS.pop();
+      for (var i = 0; i < len; i++) {
+        var next = i === len - 1 ? 0 : i + 1, prev = i === 0 ? len - 1 : i - 1, overlap = 0, overlapN = null, dist, distAbs;
+        edge.copy(polygon.edges[i]);
+        point.copy(circlePos).sub(points[i]);
+        if (response && point.len2() > radius2) {
+          response.aInB = false;
+        }
+        var region = this.vornoiRegion(edge, point);
+        if (region === Physics.VORONOI_REGION.LEFT) {
+          edge.copy(polygon.edges[prev]);
+          var point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
+          region = this.vornoiRegion(edge, point2);
+          if (region === Physics.VORONOI_REGION.RIGHT) {
+            dist = point.length();
+            if (dist > radius) {
+              T_VECTORS.push(circlePos);
+              T_VECTORS.push(edge);
+              T_VECTORS.push(point);
+              T_VECTORS.push(point2);
+              return false;
+            } else if (response) {
+              response.bInA = false;
+              overlapN = point.normalize();
+              overlap = radius - dist;
+            }
           }
-        } else if (b2.type !== C.PHYSICS_TYPE.STATIC) {
-          b2.y += this._overlap;
-          b2.velocity.y = this._velocity1 - this._velocity2 * b2.bounce.y;
-          if (b1.carry && dy1 < dy2) {
-            b2.x += b1.deltaX();
+          T_VECTORS.push(point2);
+        } else if (region === Physics.VORONOI_REGION.RIGHT) {
+          edge.copy(polygon.edges[next]);
+          point.copy(circlePos).sub(points[next]);
+          region = this.vornoiRegion(edge, point);
+          if (region === Physics.VORONOI_REGION.LEFT) {
+            dist = point.length();
+            if (dist > radius) {
+              T_VECTORS.push(circlePos);
+              T_VECTORS.push(edge);
+              T_VECTORS.push(point);
+              return false;
+            } else if (response) {
+              response.bInA = false;
+              overlapN = point.normalize();
+              overlap = radius - dist;
+            }
+          }
+        } else {
+          var normal = edge.perp().normalize();
+          dist = point.dot(normal);
+          distAbs = math.abs(dist);
+          if (dist > 0 && distAbs > radius) {
+            T_VECTORS.push(circlePos);
+            T_VECTORS.push(normal);
+            T_VECTORS.push(point);
+            return false;
+          } else if (response) {
+            overlapN = normal;
+            overlap = radius - dist;
+            if (dist >= 0 || overlap < 2 * radius) {
+              response.bInA = false;
+            }
           }
         }
+        if (overlapN && response && math.abs(overlap) < math.abs(response.overlap)) {
+          response.overlap = overlap;
+          response.overlapN.copy(overlapN);
+        }
+      }
+      if (response) {
+        response.a = polygon;
+        response.b = circle;
+        response.overlapV.copy(response.overlapN).multiplyScalar(response.overlap);
+      }
+      T_VECTORS.push(circlePos);
+      T_VECTORS.push(edge);
+      T_VECTORS.push(point);
+      return true;
+    },
+    testCirclePolygon: function (circle, polygon, response) {
+      var result = this.testPolygonCircle(polygon, circle, response);
+      if (result && response) {
+        var a = response.a, aInB = response.aInB;
+        response.overlapN.negate();
+        response.overlapV.negate();
+        response.a = response.b;
+        response.b = a;
+        response.aInB = response.bInA;
+        response.bInA = aInB;
+      }
+      return result;
+    },
+    testPolygonPolygon: function (a, b, response) {
+      var aPoints = a.points, aLen = aPoints.length, bPoints = b.points, bLen = bPoints.length, i;
+      for (i = 0; i < aLen; i++) {
+        if (this.isSeparatingAxis(a.position, b.position, aPoints, bPoints, a.normals[i], response)) {
+          return false;
+        }
+      }
+      for (i = 0; i < bLen; i++) {
+        if (this.isSeparatingAxis(a.position, b.position, aPoints, bPoints, b.normals[i], response)) {
+          return false;
+        }
+      }
+      if (response) {
+        response.a = a;
+        response.b = b;
+        response.overlapV.copy(response.overlapN).multiplyScalar(response.overlap);
+      }
+      return true;
+    },
+    flattenPointsOn: function (points, normal, result) {
+      var min = Number.MAX_VALUE, max = -Number.MAX_VALUE, len = points.length;
+      for (var i = 0; i < len; ++i) {
+        var dot = points[i].dot(normal);
+        min = math.min(dot, min);
+        max = math.max(dot, max);
+      }
+      result = result || [];
+      result[0] = min;
+      result[1] = max;
+      return result;
+    },
+    isSeparatingAxis: function (aPos, bPos, aPoints, bPoints, axis, response) {
+      var rangeA = T_ARRAYS.pop(), rangeB = T_ARRAYS.pop(), offsetV = T_VECTORS.pop().copy(bPos).sub(aPos), projectedOffset = offsetV.dot(axis), option1, option2;
+      this.flattenPointsOn(aPoints, axis, rangeA);
+      this.flattenPointsOn(bPoints, axis, rangeB);
+      rangeB[0] += projectedOffset;
+      rangeB[1] += projectedOffset;
+      if (rangeA[0] > rangeB[1] || rangeB[0] > rangeA[1]) {
+        T_VECTORS.push(offsetV);
+        T_ARRAYS.push(rangeA);
+        T_ARRAYS.push(rangeB);
         return true;
       }
-      return false;
-    },
-    _collideSpriteVsSprite: function (sprite1, sprite2, onCollision) {
-      if (this.separate(sprite1.body, sprite2.body)) {
-        this._hit(sprite1, sprite2, onCollision);
-      }
-    },
-    _collideSpriteVsContainer: function (sprite, container, onCollision) {
-      this._potentials = this.tree.retrieve(sprite.body);
-      for (var i = 0, il = this._potentials.length; i < il; ++i) {
-        if (this._spriteInChain(this._potentials[i].sprite, container)) {
-          if (this.separate(sprite.body, this._potentials[i])) {
-            this._hit(sprite, container, onCollision);
+      if (response) {
+        var overlap = 0;
+        if (rangeA[0] < rangeB[0]) {
+          response.aInB = false;
+          if (rangeA[1] < rangeB[1]) {
+            overlap = rangeA[1] - rangeB[0];
+            response.bInA = false;
+          } else {
+            option1 = rangeA[1] - rangeB[0];
+            option2 = rangeB[1] - rangeA[0];
+            overlap = option1 < option2 ? option1 : -option2;
+          }
+        } else {
+          response.bInA = false;
+          if (rangeA[1] > rangeB[1]) {
+            overlap = rangeA[0] - rangeB[1];
+            response.aInB = false;
+          } else {
+            option1 = rangeA[1] - rangeB[0];
+            option2 = rangeB[1] - rangeA[0];
+            overlap = option1 < option2 ? option1 : -option2;
+          }
+        }
+        var absOverlap = math.abs(overlap);
+        if (absOverlap < response.overlap) {
+          response.overlap = absOverlap;
+          response.overlapN.copy(axis);
+          if (overlap < 0) {
+            response.overlapN.negate();
           }
         }
       }
-    },
-    _collideContainerVsContainer: function (container1, container2, onCollision) {
-      if (container1.first._iNext) {
-        var node = container1.first._iNext;
-        do {
-          if (node instanceof Sprite)
-            this.collideSpriteVsGroup(node, container2, onCollision);
-          node = node._iNext;
-        } while (node !== container1.last._iNext);
-      }
-    },
-    _spriteInChain: function (spr, container) {
-      var c = spr._container;
-      while (c) {
-        if (c === container)
-          return true;
-        c = c.parent;
-      }
+      T_VECTORS.push(offsetV);
+      T_ARRAYS.push(rangeA);
+      T_ARRAYS.push(rangeB);
       return false;
+    },
+    vornoiRegion: function (line, point) {
+      var len2 = line.lengthSq(), dp = point.dot(line);
+      if (dp < 0)
+        return Physics.VORONOI_REGION.LEFT;
+      else if (dp > len2)
+        return Physics.VORONOI_REGION.RIGHT;
+      else
+        return Physics.VORONOI_REGION.MIDDLE;
     }
   });
+  Physics.VORONOI_REGION = {
+    LEFT: -1,
+    MIDDLE: 0,
+    RIGHT: 1
+  };
 // uRequire v0.6.1: END body of original nodejs module
 
 

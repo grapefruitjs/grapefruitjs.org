@@ -47,7 +47,7 @@
          "name":"collision",
          "opacity":1,
          "type":"tilelayer",
-         "visible":false,
+         "visible":true,
          "width":60,
          "x":0,
          "y":0
@@ -103,39 +103,39 @@
             {
              "0":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "1":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "2":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "3":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "4":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "5":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "6":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "7":
                 {
-                 "mass":"1"
+                 "static":"true"
                 },
              "8":
                 {
-                 "mass":"1"
+                 "static":"true"
                 }
             },
          "tilewidth":70
