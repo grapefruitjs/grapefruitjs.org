@@ -42,6 +42,9 @@ function Player(game) {
 
     //anchor to middle
     this.anchor.x = 0.5;
+
+    this.gfx = new gf.PIXI.Graphics();
+    game.world.addChild(this.gfx);
 }
 
 gf.inherit(Player, gf.Sprite, {
@@ -96,9 +99,11 @@ gf.inherit(Player, gf.Sprite, {
     isGrounded: function() {
         return (this.body.touching & gf.DIRECTION.BOTTOM);
     },
-    onCollision: function() {
+    onCollide: function(obj, collision) {
         this._setMoveAnimation();
-        //console.log(this.body.y);
+        this.gfx.clear();
+        gf.debug.drawBodyShape(this.body, { size: 1, color: 0xff00ff, alpha: 1 }, this.gfx);
+        gf.debug.drawBodyShape(obj.body, { size: 1, color: 0xff00ff, alpha: 1 }, this.gfx);
     },
     _checkMovement: function() {
         //set X
