@@ -34,8 +34,8 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
         dirs: {
             build: 'build',
-            less: 'less',
-            src: 'js'
+            less: 'src/less',
+            src: 'src/js'
         },
         files: {
             intro: '<%= dirs.src %>/intro.js',

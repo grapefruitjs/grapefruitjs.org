@@ -8,6 +8,7 @@
 
         <link rel="shortcut icon" href="favicon.ico">
 
+        <link rel="stylesheet" href="vendor/css/bootstrap.min.css">
         <!-- Built Stylesheets -->
         <link rel="stylesheet" href="build/gfsite.css">
     </head>
@@ -15,41 +16,68 @@
     <body>
         <!-- Top Navbar -->
         <header>
-            <nav>
-                <ul>
-                    <li class="start"></li>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Features</a></li>
-                    <li><a href="#">Guides</a></li>
-                    <li><a href="#">API Docs</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Forums</a></li>
-                    <li class="end"></li>
-                </ul>
-            </nav>
+           <nav class="navbar navbar-default navbar-static-top" role="navigation">
+                <div class="container">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex7-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                      </button>
+                      <a class="navbar-brand" href="#">Grapefruit.js</a>
+                    </div>
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse navbar-ex7-collapse pull-right">
+                      <ul class="nav navbar-nav">
+                        <li class="active"><a href="#">Home</a></li>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Guides</a></li>
+                        <li><a href="#">API Docs</a></li>
+                        <li><a href="#">Guides</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Forums</a></li>
+                      </ul>
+                    </div><!-- /.navbar-collapse -->
+                </div>
+          </nav>
         </header>
 
         <!-- Demo Area -->
         <section id="demo">
-            
+            <div class="container">
+                <div class="col-md-7" style="background-color: gray">
+                    <h2>Stuff</h2>
+                </div>
+                <div class="col-md-5" style="background-color: lightGray">
+                    <h2>About GF</h2>
+                </div>
+            </div>
         </section>
 
         <!-- Main Content Area -->
         <section id="content">
-            
+            <div class="container">
+                <div class="col-md-4 col-md-offset-4 text-center">
+                    <h3>Features</h3>
+                </div>
+            </div>
         </section>
 
         <!-- Footer Area -->
         <footer>
             
         </footer>
-
         <!-- jQuery
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
-        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.2.min.js"><\/script>')</script>
+        <script>window.jQuery || document.write('<script src="vendor/js/jquery-1.10.2.min.js"><\/script>')</script>
 
         <!-- Pace.js -->
-        <script src="js/vendor/pace.min.js"></script>
+        <script src="vendor/js/pace.min.js"></script>
+
+        <!-- Bootstrap.js -->
+        <script src="vendor/js/bootstrap.min.js"></script>
 
         <!-- main js -->
         <script src="build/gfsite.js"></script>
