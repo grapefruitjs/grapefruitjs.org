@@ -452,3 +452,7 @@ table {
     transform: rotate(360deg);
   }
 }
+body .feature {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
