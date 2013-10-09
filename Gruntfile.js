@@ -2,6 +2,8 @@ var path = require('path'),
     fs = require('fs');
 
 module.exports = function(grunt) {
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -9,6 +11,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-replace');
+    grunt.loadNpmTasks('assemble');
 
     //explicity set source files because order is important
     var srcFiles = [
@@ -35,16 +38,19 @@ module.exports = function(grunt) {
         dirs: {
             build: 'build',
             less: 'src/less',
-            src: 'src/js'
+            src: 'src/js',
+            vendor: 'vendor',
+            layouts: 'src/templates/layouts',
+            pages: 'src/templates/pages'
         },
         files: {
             intro: '<%= dirs.src %>/intro.js',
             outro: '<%= dirs.src %>/outro.js',
             less: '<%= dirs.less %>/main.less',
-            buildJs: '<%= dirs.build %>/<%= pkg.name %>.js',
-            buildJsMin: '<%= dirs.build %>/<%= pkg.name %>.min.js',
-            buildCss: '<%= dirs.build %>/<%= pkg.name %>.css',
-            buildCssMin: '<%= dirs.build %>/<%= pkg.name %>.min.css'
+            buildJs: '<%= dirs.build %>/js/<%= pkg.name %>.js',
+            buildJsMin: '<%= dirs.build %>/js/<%= pkg.name %>.min.js',
+            buildCss: '<%= dirs.build %>/css/<%= pkg.name %>.css',
+            buildCssMin: '<%= dirs.build %>/css/<%= pkg.name %>.min.css'
         },
         replace: {
             dist: {
@@ -64,6 +70,22 @@ module.exports = function(grunt) {
                 ]
             }
         },
+        clean: {
+            all: '<%= dirs.build %>'
+        },
+        // Copy vendor files into build folder.
+        copy: {
+            main: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.vendor %>',
+                        src: '**',
+                        dest: '<%= dirs.build %>'
+                    }
+                ]
+            }
+        },       
         concat: {
             options: {
                 banner: banner
@@ -143,19 +165,20 @@ module.exports = function(grunt) {
             }
         },
         watch: {
+            options: {
+                interrupt: true
+            },
             less: {
                 files: '<%= dirs.less %>/**/*.less',
-                tasks: ['buildCss'],
-                options: {
-                    interrupt: true
-                }
+                tasks: ['buildCss']
             },
             scripts: {
                 files: '<%= dirs.src %>/**/*.js',
-                tasks: ['buildJs'],
-                options: {
-                    interrupt: true
-                }
+                tasks: ['buildJs']
+            },
+            templates: {
+                files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs'],
+                tasks: ['buildHbs']
             }
         },
         connect: {
@@ -166,15 +189,30 @@ module.exports = function(grunt) {
                     keepalive: true
                 }
             }
+        },
+        assemble: {
+            options: {
+                assets: '<%= dirs.build %>',
+                layoutdir: '<%= dirs.layouts %>',
+                layout: 'default.hbs',
+                flatten: true
+            },
+            index: {
+                files: {
+                    '<%= dirs.build %>/index/': ['<%= dirs.pages %>/index/index.hbs']
+                }
+            }
+
         }
     });
 
     //default task
-    grunt.registerTask('default', ['hint', 'buildJs', 'buildCss']);
+    grunt.registerTask('default', ['hint', 'clean', 'copy', 'buildJs', 'buildCss', 'assemble']);
 
     grunt.registerTask('hint', ['jshint']);
     grunt.registerTask('buildJs', ['concat', 'uglify', 'replace']);
     grunt.registerTask('buildCss', ['less:dev', 'less:prod']);
+    grunt.registerTask('buildHbs', ['assemble']);
 
     grunt.registerTask('dev', ['default', 'watch']);
 };
