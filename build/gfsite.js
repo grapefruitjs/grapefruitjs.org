@@ -4,7 +4,7 @@
  * Copyright (c) 2013, Chad Engler
  * https://github.com/grapefruitjs/grapefruitjs.org
  *
- * Compiled: 2013-09-29
+ * Compiled: 2013-10-12
  *
  * GrapeFruit Website is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
@@ -57,6 +57,9 @@ function Player(game) {
 
     //anchor to middle
     this.anchor.x = 0.5;
+
+    this.gfx = new gf.PIXI.Graphics();
+    game.world.addChild(this.gfx);
 }
 
 gf.inherit(Player, gf.Sprite, {
@@ -111,9 +114,11 @@ gf.inherit(Player, gf.Sprite, {
     isGrounded: function() {
         return (this.body.touching & gf.DIRECTION.BOTTOM);
     },
-    onCollide: function() {
+    onCollide: function(obj) {
         this._setMoveAnimation();
-        //console.log(this.body.y);
+        this.gfx.clear();
+        gf.debug.drawBodyShape(this.body, { size: 1, color: 0xff00ff, alpha: 1 }, this.gfx);
+        gf.debug.drawBodyShape(obj.body, { size: 1, color: 0xff00ff, alpha: 1 }, this.gfx);
     },
     _checkMovement: function() {
         //set X
@@ -246,11 +251,13 @@ game.load.on('complete', function() {
 //start loading
 game.load.start();
 
+/*
 game.on('tick', function() {
     game.physics.collide(window.player, game.world, function(player, obj) {
         player.onCollide(obj);
     });
 });
+*/
 
 window.setup = setup;
 window.teardown = teardown;
