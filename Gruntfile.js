@@ -192,7 +192,7 @@ module.exports = function(grunt) {
             test: {
                 options: {
                     port: grunt.option('port-test') || 9002,
-                    base: './',
+                    base: '<%= dirs.build %>',
                     keepalive: true
                 }
             }
