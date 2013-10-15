@@ -40,6 +40,7 @@ module.exports = function(grunt) {
             less: 'src/less',
             src: 'src/js',
             vendor: 'vendor',
+            imgs: 'src/img',
             layouts: 'src/templates/layouts',
             pages: 'src/templates/pages'
         },
@@ -82,6 +83,12 @@ module.exports = function(grunt) {
                         cwd: '<%= dirs.vendor %>',
                         src: '**',
                         dest: '<%= dirs.build %>'
+                    },
+                     {
+                        expand: true,
+                        cwd: '<%= dirs.imgs %>',
+                        src: '**',
+                        dest: '<%= dirs.build %>/img'
                     }
                 ]
             }
