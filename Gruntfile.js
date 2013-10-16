@@ -1,6 +1,3 @@
-var path = require('path'),
-    fs = require('fs');
-
 module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
@@ -15,7 +12,10 @@ module.exports = function(grunt) {
 
     //explicity set source files because order is important
     var srcFiles = [
-        '<%= dirs.src %>/main.js'
+        '<%= dirs.src %>/main.js',
+        '<%= dirs.game %>/Player.js',
+        '<%= dirs.game %>/Cloud.js',
+        '<%= dirs.game %>/game.js'
     ],
     banner = [
         '/**',
@@ -40,6 +40,7 @@ module.exports = function(grunt) {
             less: 'src/less',
             src: 'src/js',
             vendor: 'vendor',
+            game: 'game',
             imgs: 'src/img',
             layouts: 'src/templates/layouts',
             pages: 'src/templates/pages'
@@ -84,15 +85,21 @@ module.exports = function(grunt) {
                         src: '**',
                         dest: '<%= dirs.build %>'
                     },
-                     {
+                    {
                         expand: true,
                         cwd: '<%= dirs.imgs %>',
                         src: '**',
                         dest: '<%= dirs.build %>/img'
+                    },
+                    {
+                        expand: true,
+                        cwd: '<%= dirs.game %>',
+                        src: '**',
+                        dest: '<%= dirs.build %>/game'
                     }
                 ]
             }
-        },       
+        },
         concat: {
             options: {
                 banner: banner
@@ -113,7 +120,7 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
-            beforeconcat: srcFiles,
+            beforeconcat: srcFiles.concat('Gruntfile.js'),
             options: {
                 /* Enforcement options */
                 bitwise: false,     //allow bitwise operators
@@ -139,16 +146,22 @@ module.exports = function(grunt) {
 
                 /* Environments */
                 browser: true,      //this runs in a browser :)
-                devel: false,       //warn about using console.log and the like
-                jquery: false,      //no jquery used here
-                node: false,        //no node support...YET! :)
-                worker: false,       //web-workers are not used
+                devel: true,        //do not warn about using console.log and the like
+                jquery: true,       //jquery used here
+                node: false,        //no node support
+                worker: false,      //web-workers are not used
 
                 /* Globals */
                 undef: true,
                 globals: {
+                    require: false,
+                    module: false,
+
                     gf: false,
-                    PIXI: false
+                    PIXI: false,
+
+                    Cloud: false,
+                    Player: false
                 }
             }
         },
@@ -180,12 +193,26 @@ module.exports = function(grunt) {
                 tasks: ['buildCss']
             },
             scripts: {
-                files: '<%= dirs.src %>/**/*.js',
+                files: ['<%= dirs.src %>/**/*.js','<%= dirs.game %>/**/*.js'],
                 tasks: ['buildJs']
             },
             templates: {
                 files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs'],
                 tasks: ['buildHbs']
+            },
+            gruntfile: {
+                files: 'Gruntfile.js',
+                tasks: ['default'],
+                options: {
+                    interrupt: true
+                }
+            },
+            grapefruit: {
+                files: '../grapefruit/src/**/*.js',
+                tasks: ['grape'],
+                options: {
+                    spawn: false
+                }
             }
         },
         connect: {
@@ -222,4 +249,22 @@ module.exports = function(grunt) {
     grunt.registerTask('buildHbs', ['assemble']);
 
     grunt.registerTask('dev', ['default', 'watch']);
+
+    grunt.registerTask('grape', 'rebuild grapefruit', function() {
+        var done = this.async();
+
+        require('child_process').exec('cd ../grapefruit && rm -rf build/gf.js__temp && grunt urequire:dev && cp build/gf.js ../grapefruitjs.org/js/vendor/',
+            function(error, stdout, stderr) {
+                console.log('\n' + stdout);
+
+                if(stderr)
+                    console.log(stderr);
+
+                if(error)
+                    console.log(error);
+
+                done(!error);
+            }
+        );
+    });
 };
