@@ -233,7 +233,7 @@ module.exports = function(grunt) {
             },
             index: {
                 files: {
-                    '<%= dirs.build %>/index/': ['<%= dirs.pages %>/index/index.hbs']
+                    '<%= dirs.build %>/index': ['<%= dirs.pages %>/index/index.hbs']
                 }
             }
 
