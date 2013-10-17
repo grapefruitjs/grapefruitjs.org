@@ -253,7 +253,7 @@ module.exports = function(grunt) {
     grunt.registerTask('grape', 'rebuild grapefruit', function() {
         var done = this.async();
 
-        require('child_process').exec('cd ../grapefruit && rm -rf build/gf.js__temp && grunt urequire:dev && cp build/gf.js ../grapefruitjs.org/js/vendor/',
+        require('child_process').exec('cd ../grapefruit && rm -rf build/gf.js__temp && grunt urequire:dev && cp build/gf.js ../grapefruitjs.org/vendor/js/',
             function(error, stdout, stderr) {
                 console.log('\n' + stdout);
 
