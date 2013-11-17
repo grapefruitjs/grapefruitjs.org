@@ -24,6 +24,7 @@ module.exports = function(grunt) {
         dirs: {
             build: 'build',
             less: 'src/less',
+            data: 'src/data',
             src: 'src/js',
             vendor: 'vendor',
             game: 'game',
@@ -175,7 +176,8 @@ module.exports = function(grunt) {
                 assets: '<%= dirs.build %>',
                 layoutdir: '<%= dirs.layouts %>',
                 layout: 'default.hbs',
-                flatten: true
+                flatten: true,
+                data: '<%= dirs.data %>/*.{json,yml}'
             },
             index: {
                 files: {

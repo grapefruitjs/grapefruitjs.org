@@ -1,0 +1,34 @@
+{
+    "features": [
+        {
+            "title": "Powerful Rendering Engine",
+            "image": "./img/features/webgl.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        },
+        {
+            "title": "Full featured Tiled Map Editor support",
+            "image": "./img/features/tilemap.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        },
+        {
+            "title": "Physics System via Chipmunk-js",
+            "image": "./img/features/webgl.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        },
+        {
+            "title": "Web Audio API & HTML5 Audio Support",
+            "image": "./img/features/tilemap.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        },
+        {
+            "title": "Input Manager (keyboard, mouse, touch, and gamepad)",
+            "image": "./img/features/webgl.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        },
+        {
+            "title": "Web Audio API & HTML5 Audio Support",
+            "image": "./img/features/tilemap.png",
+            "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl."
+        }
+    ]
+}

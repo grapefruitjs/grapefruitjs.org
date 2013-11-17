@@ -31,29 +31,19 @@ title: Grapefruit JS
                 <h1 class="shadowText">Engine Features</h1>
             </div>
         </div>
-        <div class="feature row col-md-offset-1">
-            <div class="col-md-6 col-sm-8">
-                <h3>Javascript is in its bones...</h3>
-                <p>Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl. Kielbasa chuck beef sausage biltong.</p>
+        {{#each index.features}}
+            <div class="feature row col-md-offset-1">
+                <div class="feature-image col-md-4 col-sm-4">
+                    <a href="#" class="thumbnail">
+                        <img src="{{image}}" alt="">
+                    </a>
+                </div>
+                <div class="col-md-6 col-sm-8">
+                    <h3>{{title}}</h3>
+                    <p>{{description}}</p>
+                </div>
             </div>
-            <div class="col-md-4 col-sm-4">
-                <a href="#" class="thumbnail">
-                    <img src="http://lorempixel.com/300/200/" alt="" style="width:100%">
-                </a>
-            </div>
-        </div>
-
-        <div class="feature row col-md-offset-1">
-            <div class="col-md-4 col-sm-4">
-                <a href="#" class="thumbnail">
-                    <img src="http://lorempixel.com/320/200/" alt="" style="width:100%">
-                </a>
-            </div>
-            <div class="col-md-6 col-sm-8">
-                <h3>HTML5 tattoo... dont ask where.</h3>
-                <p>Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl.</p>
-            </div>
-        </div>
+        {{/each}}
         <!-- News -->
         <div class="row">
             <div class="col-md-12 text-center clearfix">
