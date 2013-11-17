@@ -1,66 +1,14 @@
 @navHeight: 54px;
-@splitLeft: solid 1px #111;
-@splitRight: solid 1px #353535;
+@navWidth: 725px;
 
 header {
     width: 100%;
     height: @navHeight;
+    margin-bottom: 50px;
 
-    top: 0;
-    position: fixed;
-
-    color: #fff;
-    border-bottom: 1px solid #000;
-
-    .gradient(#303030, #242424, #303030);
-
-    nav {
-        width: 765px;
-        padding: 0 10px;
+    nav.main-menu {
+        width: @navWidth;
         margin: 0 auto;
-
-        ul {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            float: left;
-
-            li {
-                margin: 0;
-                float: left;
-                height: @navHeight;
-                line-height: @navHeight;
-
-                &.start {
-                    border-right: @splitRight;
-                }
-
-                &.end {
-                    border-right: @splitLeft;
-                }
-
-                 a {
-                    padding: 0 40px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    display: block;
-
-                    color: #fff;
-
-                    text-decoration: none;
-
-                    .transition(all 0.5s ease);
-                    text-shadow: 0 -1px #111;
-
-                    border-right: @splitRight;
-                    border-left: @splitLeft;
-
-                    &:hover {
-                        color: #fff;
-                        background: rgba(100, 100, 100, 0.5);
-                    }
-                }
-            }
-        }
+        display: block;
     }
 }

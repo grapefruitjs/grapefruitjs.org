@@ -5,48 +5,56 @@
         <title>{{ title }}</title>
         <link rel="shortcut icon" href="favicon.ico">
         <link rel="stylesheet" href="{{assets}}/css/bootstrap.min.css">
+        <link rel="stylesheet" href="{{assets}}/css/dark-velvet.css">
         <!-- Built Stylesheets -->
         <link rel="stylesheet" href="{{assets}}/css/gfsite.css">
         <link rel="stylesheet" href="{{assets}}/css/gf-debug.css">
     </head>
 
     <body>
-        <!-- Top Navbar -->
-        <header>
-           <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-                <div class="container">
-                    <!-- Brand and toggle get grouped for better mobile display -->
-                    <div class="navbar-header">
-                      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex7-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                      </button>
-                      <a class="logo" href=""><img src="{{assets}}/img/logo.png" alt="grapefruitjs"/></a>
-                    </div>
-                    <!-- Collect the nav links, forms, and other content for toggling -->
-                    <div class="collapse navbar-collapse navbar-ex7-collapse pull-right">
-                      <ul class="nav navbar-nav">
-                        <li class="active"><a href="#">Home</a></li>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Guides</a></li>
-                        <li><a href="#">API Docs</a></li>
-                        <li><a href="#">Blog</a></li>
-                      </ul>
-                    </div><!-- /.navbar-collapse -->
-                </div>
-          </nav>
-        </header>
+        <section class="body_wrap">
+            <section class="container">
+                <!-- content -->
+                <section class="content " role="main">
+                    <!-- Top Navbar -->
+                    <header>
+                       <nav class="main-menu dropdown-wrap boxed-velvet" role="navigation">
+                            <div class="container inner">
+                                <!-- Brand and toggle get grouped for better mobile display -->
+                                <div class="navbar-header">
+                                  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex7-collapse">
+                                    <span class="sr-only">Toggle navigation</span>
+                                    <span class="icon-bar"></span>
+                                    <span class="icon-bar"></span>
+                                    <span class="icon-bar"></span>
+                                  </button>
+                                  <a class="logo" href=""><img src="{{assets}}/img/logo.png" alt="grapefruitjs"/></a>
+                                </div>
+                                <!-- Collect the nav links, forms, and other content for toggling -->
+                                <div class="pull-right">
+                                  <ul class="dropdown">
+                                    <li class="menu-level-0"><a href="#">Home</a></li>
+                                    <li class="menu-level-0"><a href="#">Features</a></li>
+                                    <li class="menu-level-0"><a href="#">Guides</a></li>
+                                    <li class="menu-level-0"><a href="#">API Docs</a></li>
+                                    <li class="menu-level-0 last"><a href="#">Blog</a></li>
+                                  </ul>
+                                </div><!-- /.navbar-collapse -->
+                            </div>
+                      </nav>
+                    </header>
 
-        {{> body }}
+                    {{> body }}
 
-        <!-- Footer Area -->
-        <footer style="margin: 50px 0 25px;">
-            <div class="container text-center">
-                <p>© 2013 Company, Inc. · <a href="#">License</a> · <a href="#">Terms</a> · <a href="#">etc</a> </p>
-            </div>
-        </footer>
+                    <!-- Footer Area -->
+                    <footer style="margin: 50px 0 25px;">
+                        <div class="container text-center">
+                            <p>© 2013 Company, Inc. · <a href="#">License</a> · <a href="#">Terms</a> · <a href="#">etc</a> </p>
+                        </div>
+                    </footer>
+                </section>
+            </section>
+        </section>
         <!-- jQuery
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
         <script>window.jQuery || document.write('<script src="{{assets}}/js/jquery-1.10.2.min.js"><\/script>')</script>
