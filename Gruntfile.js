@@ -1,40 +1,26 @@
 module.exports = function(grunt) {
-    grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-connect');
-    grunt.loadNpmTasks('grunt-contrib-less');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-replace');
-    grunt.loadNpmTasks('assemble');
-
-    //explicity set source files because order is important
-    var srcFiles = [
-        '<%= dirs.src %>/main.js',
-        '<%= dirs.game %>/Player.js',
-        '<%= dirs.game %>/Cloud.js',
-        '<%= dirs.game %>/game.js'
-    ],
-    banner = [
-        '/**',
-        ' * @license',
-        ' * <%= pkg.longName %> - v<%= pkg.version %>',
-        ' * Copyright (c) 2013, Chad Engler',
-        ' * <%= pkg.homepage %>',
-        ' *',
-        ' * Compiled: <%= grunt.template.today("yyyy-mm-dd") %>',
-        ' *',
-        ' * <%= pkg.longName %> is licensed under the <%= pkg.license %> License.',
-        ' * <%= pkg.licenseUrl %>',
-        ' */',
-        ''
-    ].join('\n');
+    var glob = require('glob'),
+        source = glob.sync('src/js/**/*.js'),//.filter(function(v) { return v.indexOf('vendor') === -1; }),
+        testPort = grunt.option('port-test') || 9002,
+        pkg = grunt.file.readJSON('package.json'),
+        banner = [
+            '/**',
+            ' * @license',
+            ' * <%= pkg.longName %> - v<%= pkg.version %>',
+            ' * Copyright (c) 2013, Chad Engler',
+            ' * <%= pkg.homepage %>',
+            ' *',
+            ' * Compiled: <%= grunt.template.today("yyyy-mm-dd") %>',
+            ' *',
+            ' * <%= pkg.longName %> is licensed under the <%= pkg.license %> License.',
+            ' * <%= pkg.licenseUrl %>',
+            ' */',
+            ''
+        ].join('\n');
 
     //Project Configuration
     grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'),
+        pkg: pkg,
         dirs: {
             build: 'build',
             less: 'src/less',
@@ -90,13 +76,13 @@ module.exports = function(grunt) {
                         cwd: '<%= dirs.imgs %>',
                         src: '**',
                         dest: '<%= dirs.build %>/img'
-                    },
+                    }/*,
                     {
                         expand: true,
                         cwd: '<%= dirs.game %>',
                         src: '**',
                         dest: '<%= dirs.build %>/game'
-                    }
+                    }*/
                 ]
             }
         },
@@ -105,7 +91,7 @@ module.exports = function(grunt) {
                 banner: banner
             },
             dist: {
-                src: ['<%= files.intro %>'].concat(srcFiles).concat(['<%= files.outro %>']),
+                src: ['<%= files.intro %>'].concat(source).concat(['<%= files.outro %>']),
                 dest: '<%= files.buildJs %>'
             }
         },
@@ -120,7 +106,7 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
-            beforeconcat: srcFiles.concat('Gruntfile.js'),
+            beforeconcat: source.concat('Gruntfile.js'),
             options: {
                 jshintrc: '.jshintrc'
             }
@@ -178,7 +164,7 @@ module.exports = function(grunt) {
         connect: {
             dev: {
                 options: {
-                    port: grunt.option('port-test') || 9002,
+                    port: testPort,
                     base: '<%= dirs.build %>',
                     keepalive: true
                 }
@@ -199,6 +185,18 @@ module.exports = function(grunt) {
 
         }
     });
+
+    //load NPM tasks
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-replace');
+    grunt.loadNpmTasks('assemble');
 
     //default task
     grunt.registerTask('default', ['hint', 'clean', 'copy', 'buildJs', 'buildCss', 'assemble']);
