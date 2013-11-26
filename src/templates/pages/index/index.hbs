@@ -1,5 +1,6 @@
 ---
 title: Grapefruit JS
+downloadUrl: https://github.com/grapefruitjs/grapefruit
 ---
 <script>
     window.LTTP_BASE_URL = '/demos/lttp/';
@@ -18,7 +19,7 @@ title: Grapefruit JS
                     <h3>Lorem Ipsum dolar et yo face</h3>
                     <p class="lead" style="color: gray">Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail.</p>
                     <a href="#" class="btn"><span>Tutorials</span></a>
-                    <a href="#" class="btn btn-right"><span>Download</span></a>
+                    <a href="{{ downloadUrl }}" class="btn btn-right"><span>Download</span></a>
                 </div>
             </div>
         </div>
@@ -30,23 +31,32 @@ title: Grapefruit JS
     <div class="container">
         <!-- Features -->
         <div class="row">
-            <div class="text-center title-container">
+            <div class="text-center title-container" id="features">
                 <h1 class="shadowText">Engine Features</h1>
             </div>
-        </div>
-        {{#each index.features}}
-            <div class="feature row col-md-offset-1">
-                <div class="feature-image col-md-4 col-sm-4">
-                    <a href="#" class="thumbnail">
-                        <img src="{{image}}" alt="">
-                    </a>
-                </div>
-                <div class="col-md-6 col-sm-8">
-                    <h3>{{title}}</h3>
-                    <p>{{description}}</p>
-                </div>
+            <div class="col-md-4 col-sm-4">
+                <ul class="feature-list text-right">
+                    {{#each index.features.left}}
+                        {{> feature}}
+                    {{/each}}
+                </ul>
             </div>
-        {{/each}}
+            <div class="feature-image col-md-4 col-sm-4">
+                <div class="feature-overlay">
+                    <p></p>
+                </div>
+                <a href="#" style="background:black;">
+                    <img style="width:100%;" src="img/features/feature-overview.png" alt="">
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-4">
+                <ul class="feature-list text-left">
+                    {{#each index.features.right}}
+                        {{> feature}}
+                    {{/each}}
+                </ul>
+            </div>
+        </div>
         <!-- News -->
         <div class="row">
             <div class="col-md-12 text-center clearfix">

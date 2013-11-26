@@ -1,21 +1,6 @@
 body {
-	//margin-top: 50px;
-
-	.feature {
-		margin-top: 40px;
-		margin-bottom: 40px;
-	}
-
-	.pizzaz {
-		.jumbotron {
-			//background: url('../img/demo-bg.png');
-			//border-top: 4px solid #efc085;
-			//border-bottom: 4px solid #efc085;
-			margin-bottom: 0;
-			padding: 30px;
-			height: 505px;
-		}
-	}
+	.text-left { text-align: left;}
+	.text-right { text-align: right;}
 
 	#content {
 		h1 {
@@ -52,4 +37,35 @@ body {
 		background: linear-gradient(to bottom,  #eb8657 0%,#dc572c 100%); /* W3C */
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eb8657', endColorstr='#dc572c',GradientType=0 ); /* IE6-9 */
 	}
+}
+
+// feature overview 
+body {
+	h4 {
+		a {
+			// why does this theme overwrite the same link color twice..
+			color: #b8c0c8;
+			&:hover {
+				color: #fff;
+			}
+		}
+	}
+	.feature {
+		margin-bottom: 100px;
+	}
+	.feature-overlay.show {
+		background: #000000;
+		display: block;
+		height: 100%;
+		width: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+		opacity: .6;
+	}
+	.feature-list {
+		margin-top: 26px;
+	}
+
+
 }
