@@ -12,7 +12,7 @@ var featureOverview = (function() {
         $(overlayQuery).show();
         $(overlayQuery).addClass('show');
     }
-    function hideOverlay(e) {
+    function hideOverlay() {
         $(overlayQuery).hide();
         $(overlayQuery).removeClass('show');
     }
@@ -20,7 +20,7 @@ var featureOverview = (function() {
         init: function() {
             registerListeners();
         }
-    }
+    };
 
 })();
 
