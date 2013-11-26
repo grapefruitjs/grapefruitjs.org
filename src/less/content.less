@@ -1,9 +1,9 @@
 body {
-	//margin-top: 50px;
+	.text-left { text-align: left;}
+	.text-right { text-align: right;}
 
 	.feature {
-		margin-top: 40px;
-		margin-bottom: 40px;
+		margin-bottom: 100px;
 	}
 
 	#content {
@@ -18,6 +18,18 @@ body {
 
 			border-bottom: 1px solid #080B0E;
 			border-top: 1px solid #33393F;
+		}
+		h4 {
+			a {
+				// why does this theme overwrite the same link color twice..
+				color: #b8c0c8;
+				&:hover {
+					color: #fff;
+				}
+			}
+		}
+		.feature-list {
+			margin-top: 26px;
 		}
 
 		.title-container {

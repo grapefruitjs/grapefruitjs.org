@@ -28,20 +28,37 @@ downloadUrl: https://github.com/grapefruitjs/grapefruit
             <div class="text-center title-container" id="features">
                 <h1 class="shadowText">Engine Features</h1>
             </div>
-        </div>
-        {{#each index.features}}
-            <div class="feature row col-md-offset-1">
-                <div class="feature-image col-md-4 col-sm-4">
-                    <a href="#" class="thumbnail">
-                        <img src="{{image}}" alt="">
-                    </a>
-                </div>
-                <div class="col-md-6 col-sm-8">
-                    <h3>{{title}}</h3>
-                    <p>{{description}}</p>
-                </div>
+            <div class="col-md-4 col-sm-4">
+                <ul class="feature-list text-right">
+                    {{#each index.features.left}}
+                        {{> feature}}
+                    {{/each}}
+                </ul>
             </div>
-        {{/each}}
+            <div class="feature-image col-md-4 col-sm-4">
+                <div style="background: #000000;
+display: block;
+height: 100%;
+width: 100%;
+position: absolute;
+top: 0;
+left: 0;
+opacity: .8;
+">
+<p>Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail. Ribeye kevin bacon, brisket ground round bresaola jerky filet mignon beef ribs boudin frankfurter ham hamburger turducken jowl. Strip steak spare ribs fatback ham pork belly. Spare ribs pork chop beef, capicola corned beef pork bresaola jowl.</p>
+                </div>
+                <a href="#" style="background:black;">
+                    <img style="width:100%;" src="img/features/feature-overview.png" alt="">
+                </a>
+            </div>
+            <div class="col-md-4 col-sm-4">
+                <ul class="feature-list text-left">
+                    {{#each index.features.right}}
+                        {{> feature}}
+                    {{/each}}
+                </ul>
+            </div>
+        </div>
         <!-- News -->
         <div class="row">
             <div class="col-md-12 text-center clearfix">

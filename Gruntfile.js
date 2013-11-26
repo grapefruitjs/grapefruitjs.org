@@ -30,7 +30,8 @@ module.exports = function(grunt) {
             game: 'game',
             imgs: 'src/img',
             layouts: 'src/templates/layouts',
-            pages: 'src/templates/pages'
+            pages: 'src/templates/pages',
+            partials: 'src/templates/partials'
         },
         files: {
             intro: '<%= dirs.src %>/intro.js',
@@ -144,7 +145,7 @@ module.exports = function(grunt) {
                 tasks: ['buildJs']
             },
             templates: {
-                files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs'],
+                files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs', '<%= dirs.partials %>/*.hbs'],
                 tasks: ['buildHbs']
             },
             gruntfile: {
@@ -182,9 +183,18 @@ module.exports = function(grunt) {
             index: {
                 files: {
                     '<%= dirs.build %>/index': ['<%= dirs.pages %>/index/index.hbs']
+                },
+                options: {
+                    partials: '<%= dirs.partials %>/feature.hbs'
                 }
             }
 
+        },
+        handlebars: {
+            options: {
+                partialRegex: /.*/,
+                partialsPathRegex: /\/partials\//
+            }
         }
     });
 
