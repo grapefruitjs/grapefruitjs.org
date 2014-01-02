@@ -53,15 +53,21 @@ body {
 	.feature {
 		margin-bottom: 100px;
 	}
-	.feature-overlay.show {
+	.feature-overlay{
 		background: #000000;
 		display: block;
 		height: 100%;
 		width: 100%;
 		position: absolute;
-		top: 0;
-		left: 0;
-		opacity: .6;
+
+		img {
+			float: left;
+			margin: 0 20px 0 0;
+		}
+		.desc {
+			position: absolute;
+			margin: 20px;
+		}
 	}
 	.feature-list {
 		margin-top: 26px;

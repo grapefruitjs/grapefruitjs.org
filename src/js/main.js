@@ -1,20 +1,18 @@
 var featureOverview = (function() {
     var featureQuery = '.feature';
-    var overlayQuery = '.feature-overlay';
+    var overlayContainer = '.feature-overlay';
+    var overlayDescription = '.feature-overlay p';
     function registerListeners() {
         $(featureQuery).on('mouseover', showOverlay);
         $(featureQuery).on('mouseout', hideOverlay);
     }
     function showOverlay(e) {
-        $(overlayQuery).html(
-            $(e.currentTarget).find('.desc').html()
-        );
-        $(overlayQuery).show();
-        $(overlayQuery).addClass('show');
+        var content = $(e.currentTarget).find('.desc').html();
+        $(overlayDescription).html(content);
+        $(overlayContainer).fadeIn(100);
     }
     function hideOverlay() {
-        $(overlayQuery).hide();
-        $(overlayQuery).removeClass('show');
+        $(overlayContainer).stop().fadeOut(200);
     }
     return {
         init: function() {
@@ -24,4 +22,6 @@ var featureOverview = (function() {
 
 })();
 
+
 featureOverview.init();
+
