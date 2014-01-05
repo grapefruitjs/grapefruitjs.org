@@ -1,6 +1,5 @@
 ---
 title: Grapefruit JS
-downloadUrl: https://github.com/grapefruitjs/grapefruit
 ---
 <script>
     window.LTTP_BASE_URL = '/demos/lttp/';
@@ -19,7 +18,7 @@ downloadUrl: https://github.com/grapefruitjs/grapefruit
                     <h3>Lorem Ipsum dolar et yo face</h3>
                     <p class="lead" style="color: gray">Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail.</p>
                     <a href="#" class="btn"><span>Tutorials</span></a>
-                    <a href="{{ downloadUrl }}" class="btn btn-right"><span>Download</span></a>
+                    <a href="{{ index.downloadUrl }}" class="btn btn-right"><span>Download</span></a>
                 </div>
             </div>
         </div>
@@ -35,7 +34,7 @@ downloadUrl: https://github.com/grapefruitjs/grapefruit
                 <h1 class="shadowText">Engine Features</h1>
             </div>
             <div class="col-md-4 col-sm-4">
-                <ul class="feature-list text-right">
+                <ul class="feature-list text-right left ribbons">
                     {{#each index.features.left}}
                         {{> feature}}
                     {{/each}}
@@ -53,7 +52,7 @@ downloadUrl: https://github.com/grapefruitjs/grapefruit
                 </div>
             </div>
             <div class="col-md-4 col-sm-4">
-                <ul class="feature-list text-left">
+                <ul class="feature-list text-left right ribbons">
                     {{#each index.features.right}}
                         {{> feature}}
                     {{/each}}

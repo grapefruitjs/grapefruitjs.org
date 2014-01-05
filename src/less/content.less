@@ -1,77 +1,97 @@
 body {
-	.text-left { text-align: left;}
-	.text-right { text-align: right;}
+    .text-left { text-align: left;}
+    .text-right { text-align: right;}
 
-	#content {
-		h1 {
-			color: #e7e7e7;
-			font-size: 2.5em;
+    #content {
+        h1 {
+            color: #e7e7e7;
+            font-size: 2.5em;
 
-			display: block;
+            display: block;
 
-			margin: 0 !important;
-			padding: 20px 0;
+            margin: 0 !important;
+            padding: 20px 0;
 
-			border-bottom: 1px solid #080B0E;
-			border-top: 1px solid #33393F;
-		}
+            border-bottom: 1px solid #080B0E;
+            border-top: 1px solid #33393F;
+        }
 
-		.title-container {
-			width: 500px;
-			margin: 20px auto;
+        .title-container {
+            width: 500px;
+            margin: 20px auto;
 
-			border-top: 1px solid #080B0E;
-			border-bottom: 1px solid #33393F;
-		}
-	}
+            border-top: 1px solid #080B0E;
+            border-bottom: 1px solid #33393F;
+        }
+    }
 
-	hr {
-		border: none;
-		height: 3px;
-		background: #eb8657; /* Old browsers */
-		background: -moz-linear-gradient(top,  #eb8657 0%, #dc572c 100%); /* FF3.6+ */
-		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eb8657), color-stop(100%,#dc572c)); /* Chrome,Safari4+ */
-		background: -webkit-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Chrome10+,Safari5.1+ */
-		background: -o-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Opera 11.10+ */
-		background: -ms-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* IE10+ */
-		background: linear-gradient(to bottom,  #eb8657 0%,#dc572c 100%); /* W3C */
-		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eb8657', endColorstr='#dc572c',GradientType=0 ); /* IE6-9 */
-	}
+    hr {
+        border: none;
+        height: 3px;
+        background: #eb8657; /* Old browsers */
+        background: -moz-linear-gradient(top,  #eb8657 0%, #dc572c 100%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eb8657), color-stop(100%,#dc572c)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* IE10+ */
+        background: linear-gradient(to bottom,  #eb8657 0%,#dc572c 100%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eb8657', endColorstr='#dc572c',GradientType=0 ); /* IE6-9 */
+    }
 }
 
-// feature overview 
+// feature overview
 body {
-	h4 {
-		a {
-			// why does this theme overwrite the same link color twice..
-			color: #b8c0c8;
-			&:hover {
-				color: #fff;
-			}
-		}
-	}
-	.feature {
-		margin-bottom: 100px;
-	}
-	.feature-overlay{
-		background: #000000;
-		display: block;
-		height: 100%;
-		width: 100%;
-		position: absolute;
+    .feature-overlay {
+        background: #000000;
+        display: block;
+        height: 100%;
+        width: 100%;
+        position: absolute;
 
-		img {
-			float: left;
-			margin: 0 20px 0 0;
-		}
-		.desc {
-			position: absolute;
-			margin: 20px;
-		}
-	}
-	.feature-list {
-		margin-top: 26px;
-	}
+        .desc {
+            position: absolute;
+            margin: 0 5px;
+            text-align: center;
+        }
+    }
 
+    .feature-list {
+        li {
+            display: block;
+            margin-top: -1px;
 
+            .ribbon {
+                margin-bottom: 0;
+                padding-top: 4px;
+                background-position: right -246px;
+
+                h4 {
+                    font-size: 1.1em;
+                    padding: 0px;
+                    margin: 0px;
+                    line-height: inherit;
+                }
+            }
+        }
+
+        &.right {
+            -moz-transform: scaleX(-1);
+            -o-transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+            filter: FlipH;
+            -ms-filter: "FlipH";
+
+            .ribbon {
+                h4 {
+                    -moz-transform: scaleX(-1);
+                    -o-transform: scaleX(-1);
+                    -webkit-transform: scaleX(-1);
+                    transform: scaleX(-1);
+                    filter: FlipH;
+                    -ms-filter: "FlipH";
+                }
+            }
+        }
+    }
 }

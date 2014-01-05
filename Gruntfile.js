@@ -145,7 +145,7 @@ module.exports = function(grunt) {
                 tasks: ['buildJs']
             },
             templates: {
-                files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs', '<%= dirs.partials %>/*.hbs'],
+                files: ['<%= dirs.layouts %>/*.hbs', '<%= dirs.pages %>/**/*.hbs', '<%= dirs.partials %>/*.hbs', '<%= dirs.data %>/*.json'],
                 tasks: ['buildHbs']
             },
             gruntfile: {
