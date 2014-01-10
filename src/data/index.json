@@ -17,6 +17,16 @@
                 "title": "Physics",
                 "image": "./img/features/tilemap.jpg",
                 "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail."
+            },
+            {
+                "title": "Particles",
+                "image": "./img/features/tilemap.jpg",
+                "description": "Boo"
+            },
+            {
+                "title": "Text Rendering",
+                "image": "./img/features/tilemap.jpg",
+                "description": "Boo"
             }
         ],
         "right": [
@@ -34,6 +44,16 @@
                 "title": "Tilemapping",
                 "image": "./img/features/tilemap.png",
                 "description": "Bacon ipsum dolor sit amet ground round beef ribeye, shank pork pork loin short ribs bacon ham hock boudin andouille venison rump tail."
+            },
+            {
+                "title": "Deterministic RNG",
+                "image": "./img/features/tilemap.jpg",
+                "description": "Boo"
+            },
+            {
+                "title": "Camera FX",
+                "image": "./img/features/tilemap.jpg",
+                "description": "Boo"
             }
         ]
     }

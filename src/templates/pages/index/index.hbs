@@ -33,7 +33,7 @@ title: Grapefruit JS
             <div class="text-center title-container" id="features">
                 <h1 class="shadowText">Engine Features</h1>
             </div>
-            <div class="col-md-4 col-sm-4">
+            <div class="col-md-3 col-sm-3">
                 <ul class="feature-list text-right left ribbons">
                     {{#each index.features.left}}
                         {{> feature}}
@@ -41,17 +41,17 @@ title: Grapefruit JS
                 </ul>
             </div>
             <!-- Feature image -->
-            <div class="col-md-4 col-sm-4">
-                <div class="row">
-                    <div class="feature-overlay col-md-12">
-                        <p class="desc"></p>
+            <div class="col-md-6 col-sm-6">
+                <div class="row monitor">
+                    <div class="feature-overview">
+                        <div class="feature-overlay">
+                            <p class="desc"></p>
+                        </div>
+                        <div class="feature-overview-frame"></div>
                     </div>
-                    <a href="#">
-                        <img style="width:100%" src="img/features/feature-overview.png" alt="">
-                    </a>
                 </div>
             </div>
-            <div class="col-md-4 col-sm-4">
+            <div class="col-md-3 col-sm-3">
                 <ul class="feature-list text-left right ribbons">
                     {{#each index.features.right}}
                         {{> feature}}

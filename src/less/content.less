@@ -41,23 +41,14 @@ body {
 
 // feature overview
 body {
-    .feature-overlay {
-        background: #000000;
-        display: block;
-        height: 100%;
-        width: 100%;
-        position: absolute;
-
-        .desc {
-            position: absolute;
-            margin: 0 5px;
-            text-align: center;
-        }
-    }
-
     .feature-list {
+        padding-top: 75px;
+        height: 412px;
+        background-image: url(../img/dark-velvet/ribbons-shadow-large.png);
+
         li {
             display: block;
+            cursor: pointer;
             margin-top: -1px;
 
             .ribbon {
@@ -91,6 +82,32 @@ body {
                     filter: FlipH;
                     -ms-filter: "FlipH";
                 }
+            }
+        }
+    }
+
+    .feature-overview {
+        width: 550px;
+        height: 350px;
+        background: url(../img/features/feature-overview.png) 23px 23px no-repeat;
+
+        .feature-overview-frame {
+            position: absolute;
+            width: 570px;
+            height: 410px;
+            background: url(../img/features/monitor_frame_medium.png) 0 0 no-repeat;
+        }
+
+        .feature-overlay {
+            background: #000000;
+            display: block;
+            height: 95%;
+            width: 95%;
+            margin: 21px 24px;
+            float: left;
+
+            .desc {
+                text-align: center;
             }
         }
     }
