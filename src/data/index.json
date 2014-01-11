@@ -1,5 +1,7 @@
 {
-    "downloadUrl": "https://github.com/grapefruitjs/grapefruit/releases",
+    "urls": {
+        "download": "https://github.com/grapefruitjs/grapefruit/releases"
+    },
 
     "features": {
         "left": [
