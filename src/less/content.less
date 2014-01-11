@@ -1,115 +1,115 @@
-body {
-    .centered { float: none; margin: 0 auto; }
-    .text-left { text-align: left;}
-    .text-right { text-align: right;}
+.centered { float: none; margin: 0 auto; }
+.text-left { text-align: left;}
+.text-right { text-align: right;}
 
-    #content {
-        h1 {
-            color: #e7e7e7;
-            font-size: 2.5em;
+#content {
+    h1 {
+        color: #e7e7e7;
+        font-size: 2.5em;
 
-            display: block;
+        display: block;
 
-            margin: 0 !important;
-            padding: 20px 0;
+        margin: 0 !important;
+        padding: 20px 0;
 
-            border-bottom: 1px solid #080B0E;
-            border-top: 1px solid #33393F;
-        }
-
-        .title-container {
-            width: 500px;
-            margin: 20px auto;
-
-            border-top: 1px solid #080B0E;
-            border-bottom: 1px solid #33393F;
-        }
+        border-bottom: 1px solid #080B0E;
+        border-top: 1px solid #33393F;
     }
 
-    hr {
-        border: none;
-        height: 3px;
-        background: #eb8657; /* Old browsers */
-        background: -moz-linear-gradient(top,  #eb8657 0%, #dc572c 100%); /* FF3.6+ */
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eb8657), color-stop(100%,#dc572c)); /* Chrome,Safari4+ */
-        background: -webkit-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Chrome10+,Safari5.1+ */
-        background: -o-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Opera 11.10+ */
-        background: -ms-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* IE10+ */
-        background: linear-gradient(to bottom,  #eb8657 0%,#dc572c 100%); /* W3C */
-        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eb8657', endColorstr='#dc572c',GradientType=0 ); /* IE6-9 */
+    .title-container {
+        width: 500px;
+        margin: 20px auto;
+
+        border-top: 1px solid #080B0E;
+        border-bottom: 1px solid #33393F;
+    }
+
+    footer {
+        margin: 50px 0 25px;
     }
 }
 
+hr {
+    border: none;
+    height: 3px;
+    background: #eb8657; /* Old browsers */
+    background: -moz-linear-gradient(top,  #eb8657 0%, #dc572c 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eb8657), color-stop(100%,#dc572c)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #eb8657 0%,#dc572c 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #eb8657 0%,#dc572c 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eb8657', endColorstr='#dc572c',GradientType=0 ); /* IE6-9 */
+}
+
 // feature overview
-body {
-    .feature-list {
-        padding-top: 75px;
-        height: 412px;
-        background-image: url(../img/dark-velvet/ribbons-shadow-large.png);
+.feature-list {
+    padding-top: 75px;
+    height: 412px;
+    background-image: url(../img/dark-velvet/ribbons-shadow-large.png);
 
-        li {
-            display: block;
-            cursor: pointer;
-            margin-top: -1px;
+    li {
+        display: block;
+        cursor: pointer;
+        margin-top: -1px;
 
-            .ribbon {
-                margin-bottom: 0;
-                padding-top: 4px;
-                background-position: right -246px;
+        .ribbon {
+            margin-bottom: 0;
+            padding-top: 4px;
+            background-position: right -246px;
 
-                h4 {
-                    font-size: 1.1em;
-                    padding: 0px;
-                    margin: 0px;
-                    line-height: inherit;
-                }
-            }
-        }
-
-        &.right {
-            -moz-transform: scaleX(-1);
-            -o-transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
-            filter: FlipH;
-            -ms-filter: "FlipH";
-
-            .ribbon {
-                h4 {
-                    -moz-transform: scaleX(-1);
-                    -o-transform: scaleX(-1);
-                    -webkit-transform: scaleX(-1);
-                    transform: scaleX(-1);
-                    filter: FlipH;
-                    -ms-filter: "FlipH";
-                }
+            h4 {
+                font-size: 1.1em;
+                padding: 0px;
+                margin: 0px;
+                line-height: inherit;
             }
         }
     }
 
-    .feature-overview {
-        width: 550px;
-        height: 350px;
-        background: url(../img/features/feature-overview.png) 23px 23px no-repeat;
+    &.right {
+        -moz-transform: scaleX(-1);
+        -o-transform: scaleX(-1);
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+        filter: FlipH;
+        -ms-filter: "FlipH";
 
-        .feature-overview-frame {
-            position: absolute;
-            width: 570px;
-            height: 410px;
-            background: url(../img/features/monitor_frame_medium.png) 0 0 no-repeat;
-        }
-
-        .feature-overlay {
-            background: #000000;
-            display: block;
-            height: 95%;
-            width: 95%;
-            margin: 21px 24px;
-            float: left;
-
-            .desc {
-                text-align: center;
+        .ribbon {
+            h4 {
+                -moz-transform: scaleX(-1);
+                -o-transform: scaleX(-1);
+                -webkit-transform: scaleX(-1);
+                transform: scaleX(-1);
+                filter: FlipH;
+                -ms-filter: "FlipH";
             }
+        }
+    }
+}
+
+.feature-overview {
+    width: 550px;
+    height: 350px;
+    background: url(../img/features/feature-overview.png) 23px 23px no-repeat;
+
+    .feature-overview-frame {
+        position: absolute;
+        width: 570px;
+        height: 410px;
+        background: url(../img/features/monitor_frame_medium.png) 0 0 no-repeat;
+    }
+
+    .feature-overlay {
+        background: #000000;
+        display: block;
+        height: 95%;
+        width: 95%;
+        margin: 21px 24px;
+        float: left;
+
+        .desc {
+            text-align: center;
         }
     }
 }
